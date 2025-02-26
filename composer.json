@@ -48,9 +48,12 @@
         ]
     },
     "extra": {
+<<<<<<< HEAD
         "branch-alias": {
             "dev-master": "10.x-dev"
         },
+=======
+>>>>>>> 39b9073807df92879a9da5ae390cfe6a0f0b666e
         "laravel": {
             "dont-discover": []
         }
@@ -60,7 +63,12 @@
         "preferred-install": "dist",
         "sort-packages": true,
         "allow-plugins": {
+<<<<<<< HEAD
             "pestphp/pest-plugin": true
+=======
+            "pestphp/pest-plugin": true,
+            "php-http/discovery": true
+>>>>>>> 39b9073807df92879a9da5ae390cfe6a0f0b666e
         }
     },
     "minimum-stability": "stable",
