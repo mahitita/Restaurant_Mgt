@@ -26,11 +26,7 @@ class User extends Authenticatable
     /**
      * The attributes that should be hidden for serialization.
      *
-<<<<<<< HEAD
      * @var array<int, string>
-=======
-     * @var list<string>
->>>>>>> 39b9073807df92879a9da5ae390cfe6a0f0b666e
      */
     protected $hidden = [
         'password',
@@ -38,7 +34,6 @@ class User extends Authenticatable
     ];
 
     /**
-<<<<<<< HEAD
      * The attributes that should be cast.
      *
      * @var array<string, string>
@@ -46,17 +41,4 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
-=======
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
-    {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
-    }
->>>>>>> 39b9073807df92879a9da5ae390cfe6a0f0b666e
 }
