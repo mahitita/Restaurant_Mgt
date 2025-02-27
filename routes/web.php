@@ -25,8 +25,32 @@ use App\Http\Controllers\HelloWorldController;
 //         'phpVersion' => PHP_VERSION,
 //     ]);
 // });
+// Route::get('/', function () {
+//       return Inertia::render('HelloWorld');
+// });
+
+// Admin Routes
+Route::prefix('admin')->group(function () {
+    Route::get('/dashboard', function () {
+        return Inertia::render('Admin/Dashboard');
+    })->name('admin.dashboard');
+
+    Route::get('/menu', function () {
+        return Inertia::render('Admin/Menu');
+    })->name('admin.menu');
+
+    Route::get('/orders', function () {
+        return Inertia::render('Admin/Orders');
+    })->name('admin.orders');
+
+    Route::get('/reservations', function () {
+        return Inertia::render('Admin/Reservations');
+    })->name('admin.reservations');
+});
+
+
 Route::get('/', function () {
-      return Inertia::render('HelloWorld');
+    return Inertia::render('Home');
 });
 Route::get('/about', function () {
     return Inertia::render('About');
