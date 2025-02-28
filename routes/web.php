@@ -5,6 +5,8 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Application;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\HelloWorldController;
+use App\Http\Controllers\AdminCategoryController;
+use App\Http\Controllers\Admin\CategoryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -48,7 +50,14 @@ Route::prefix('admin')->group(function () {
     })->name('admin.reservations');
 });
 
-
+// Route::prefix('admin')->group(function () {
+//     Route::get('/categories', [CategoryController::class, 'index'])->name('admin.categories');
+//     Route::post('/categories', [CategoryController::class, 'store'])->name('admin.categories.store');
+//     Route::delete('/categories/{id}', [CategoryController::class, 'destroy'])->name('admin.categories.destroy');
+// });
+Route::prefix('admin')->group(function () {
+    Route::resource('categories', CategoryController::class)->except(['show']);
+});
 Route::get('/', function () {
     return Inertia::render('Home');
 });
