@@ -4,6 +4,7 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Application;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Admin\MenuController;
 use App\Http\Controllers\HelloWorldController;
 use App\Http\Controllers\AdminCategoryController;
 use App\Http\Controllers\Admin\CategoryController;
@@ -57,6 +58,7 @@ Route::prefix('admin')->group(function () {
 // });
 Route::prefix('admin')->group(function () {
     Route::resource('categories', CategoryController::class)->except(['show']);
+    Route::resource('menu', MenuController::class)->except(['show']);
 });
 Route::get('/', function () {
     return Inertia::render('Home');
