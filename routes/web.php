@@ -6,6 +6,7 @@ use Illuminate\Foundation\Application;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\MenuController;
 use App\Http\Controllers\HelloWorldController;
+use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\AdminCategoryController;
 use App\Http\Controllers\Admin\CategoryController;
 
@@ -49,6 +50,9 @@ Route::prefix('admin')->group(function () {
     Route::get('/reservations', function () {
         return Inertia::render('Admin/Reservations');
     })->name('admin.reservations');
+
+    Route::patch('/admin/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('admin.orders.updateStatus');
+
 });
 
 // Route::prefix('admin')->group(function () {
