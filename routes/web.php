@@ -43,9 +43,13 @@ Route::prefix('admin')->group(function () {
         return Inertia::render('Admin/Menu');
     })->name('admin.menu');
 
-    Route::get('/orders', function () {
-        return Inertia::render('Admin/Orders');
-    })->name('admin.orders');
+
+        Route::get('/orders', [OrderController::class, 'index'])->name('admin.orders.index');
+        Route::post('/orders', [OrderController::class, 'store'])->name('admin.orders.store');
+        Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('admin.orders.updateStatus');
+        Route::delete('/orders/{order}', [OrderController::class, 'destroy'])->name('admin.orders.destroy');
+   
+
 
     Route::get('/reservations', function () {
         return Inertia::render('Admin/Reservations');
