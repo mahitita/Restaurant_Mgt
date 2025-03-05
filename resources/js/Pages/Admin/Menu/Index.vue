@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from "vue";
 import { router } from "@inertiajs/vue3";
-
+import AdminLayout from "@/Layouts/AdminLayout.vue";
 defineProps({ orders: Array });
 
 const updateStatus = (order, newStatus) => {
@@ -13,6 +13,7 @@ const updateStatus = (order, newStatus) => {
 </script>
 
 <template>
+    <AdminLayout>
     <div class="max-w-6xl mx-auto p-6 bg-white shadow-md rounded-lg">
         <h2 class="text-2xl font-bold mb-4 text-gray-700">Order Management</h2>
 
@@ -66,4 +67,6 @@ const updateStatus = (order, newStatus) => {
             </tbody>
         </table>
     </div>
+</AdminLayout>
 </template>
+

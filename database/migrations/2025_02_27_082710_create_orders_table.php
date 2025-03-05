@@ -1,75 +1,35 @@
 <?php
-namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
-use App\Models\Order;
-use App\Models\OrderItem;
-use App\Models\Menu;
-use Illuminate\Http\Request;
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
-class OrderController extends Controller
+return new class extends Migration
 {
-    // Show all orders
-    public function index()
+    /**
+     * Run the migrations.
+     */
+    public function up()
     {
-        $orders = Order::with('user', 'orderItems.menu')->latest()->get();
-        return inertia('admin/orders/Index', compact('orders'));
+        Schema::create('orders', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('set null');
+            $table->enum('order_type', ['dine-in', 'takeout', 'delivery']);
+            $table->enum('status', ['pending', 'preparing', 'ready', 'completed', 'cancelled'])->default('pending');
+            $table->decimal('total_price', 10, 2)->default(0);
+            $table->timestamp('ordered_at')->useCurrent();
+            $table->timestamps();
+        });
     }
 
-    // Create a new order (Dine-in, Takeout, Delivery)
-    public function store(Request $request)
+
+
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
     {
-        $request->validate([
-            'order_type' => 'required|in:dine-in,takeout,delivery',
-            'items' => 'required|array',
-            'items.*.menu_id' => 'exists:menus,id',
-            'items.*.quantity' => 'integer|min:1',
-        ]);
-
-        $order = Order::create([
-            'user_id' => auth()->id(),
-            'order_type' => $request->order_type,
-            'status' => 'pending',
-            'total_price' => 0,
-        ]);
-
-        $totalPrice = 0;
-
-        foreach ($request->items as $item) {
-            $menu = Menu::find($item['menu_id']);
-            $price = $menu->price * $item['quantity'];
-
-            OrderItem::create([
-                'order_id' => $order->id,
-                'menu_id' => $item['menu_id'],
-                'quantity' => $item['quantity'],
-                'price' => $price,
-            ]);
-
-            $totalPrice += $price;
-        }
-
-        $order->update(['total_price' => $totalPrice]);
-
-        return redirect()->route('admin.orders.index')->with('success', 'Order placed successfully!');
+        Schema::dropIfExists('orders');
     }
-
-    // Update order status
-    public function updateStatus(Request $request, Order $order)
-    {
-        $request->validate([
-            'status' => 'required|in:pending,preparing,ready,completed,cancelled',
-        ]);
-
-        $order->update(['status' => $request->status]);
-
-        return back()->with('success', 'Order status updated.');
-    }
-
-    // Delete an order
-    public function destroy(Order $order)
-    {
-        $order->delete();
-        return back()->with('success', 'Order deleted.');
-    }
-}
+};
