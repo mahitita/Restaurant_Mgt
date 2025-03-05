@@ -9,6 +9,7 @@ use App\Http\Controllers\HelloWorldController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\AdminCategoryController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\DashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -34,40 +35,46 @@ use App\Http\Controllers\Admin\CategoryController;
 // });
 
 // Admin Routes
-Route::prefix('admin')->group(function () {
-    Route::get('/dashboard', function () {
-        return Inertia::render('Admin/Dashboard');
-    })->name('admin.dashboard');
+// Route::prefix('admin')->group(function () {
+//     Route::get('/dashboard', function () {
+//         return Inertia::render('Admin/Dashboard');
+//     })->name('admin.dashboard');
 
-    Route::get('/menu', function () {
-        return Inertia::render('Admin/Menu');
-    })->name('admin.menu');
-
-
-        Route::get('/orders', [OrderController::class, 'index'])->name('admin.orders.index');
-        Route::post('/orders', [OrderController::class, 'store'])->name('admin.orders.store');
-        Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('admin.orders.updateStatus');
-        Route::delete('/orders/{order}', [OrderController::class, 'destroy'])->name('admin.orders.destroy');
-   
+//     Route::get('/menu', function () {
+//         return Inertia::render('Admin/Menu');
+//     })->name('admin.menu');
 
 
-    Route::get('/reservations', function () {
-        return Inertia::render('Admin/Reservations');
-    })->name('admin.reservations');
+//         Route::get('/orders', [OrderController::class, 'index'])->name('admin.orders.index');
+//         Route::post('/orders', [OrderController::class, 'store'])->name('admin.orders.store');
+//         Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('admin.orders.updateStatus');
+//         Route::delete('/orders/{order}', [OrderController::class, 'destroy'])->name('admin.orders.destroy');
 
-    Route::patch('/admin/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('admin.orders.updateStatus');
 
-});
+
+//     Route::get('/reservations', function () {
+//         return Inertia::render('Admin/Reservations');
+//     })->name('admin.reservations');
+
+//     Route::patch('/admin/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('admin.orders.updateStatus');
+
+// });
 
 // Route::prefix('admin')->group(function () {
 //     Route::get('/categories', [CategoryController::class, 'index'])->name('admin.categories');
 //     Route::post('/categories', [CategoryController::class, 'store'])->name('admin.categories.store');
 //     Route::delete('/categories/{id}', [CategoryController::class, 'destroy'])->name('admin.categories.destroy');
 // });
+// Route::prefix('admin')->group(function () {
+//     Route::resource('categories', CategoryController::class)->except(['show']);
+//     Route::resource('menu', MenuController::class)->except(['show']);
+// });
+
+
 Route::prefix('admin')->group(function () {
-    Route::resource('categories', CategoryController::class)->except(['show']);
-    Route::resource('menu', MenuController::class)->except(['show']);
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
 });
+
 Route::get('/', function () {
     return Inertia::render('Home');
 });

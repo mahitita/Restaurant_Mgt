@@ -1,35 +1,60 @@
-<!-- resources/js/components/Sidebar.vue -->
 <template>
-    <aside class="w-64 bg-white border-r border-gray-200">
-      <div class="p-4 text-lg font-bold text-gray-800">Restaurant Admin</div>
-      <nav class="mt-6">
+    <aside :class="sidebarClass" class="bg-gray-800 text-white shadow-lg transition-all duration-300">
+      <div class="flex items-center justify-between p-4">
+        <h2 v-if="!isCollapsed" class="text-xl font-bold">Admin Panel</h2>
+        <button @click="toggleSidebar" class="text-white focus:outline-none">
+          <span class="material-icons">menu</span>
+        </button>
+      </div>
+      <nav :class="!isCollapsed ? 'block' : 'hidden'">
         <ul>
-          <li class="hover:bg-blue-500 hover:text-white transition duration-200">
-            <inertia-link :href="route('dashboard')" class="flex items-center py-2 px-4 text-gray-600">
-              <span class="material-icons">dashboard</span>
-              Dashboard
-            </inertia-link>
+          <li>
+            <Link :href="route('admin.dashboard')" class="flex items-center py-2 px-4 hover:bg-gray-700 transition-all">
+              <span class="material-icons mr-2">dashboard</span>
+              <span v-if="!isCollapsed">Dashboard</span>
+            </Link>
           </li>
-          <li class="hover:bg-blue-500 hover:text-white transition duration-200">
-            <inertia-link :href="route('menu')" class="flex items-center py-2 px-4 text-gray-600">
-              <span class="material-icons">restaurant_menu</span>
-              Menu Management
-            </inertia-link>
+          <li>
+            <Link href="/admin/menu" class="flex items-center py-2 px-4 hover:bg-gray-700 transition-all">
+              <span class="material-icons mr-2">restaurant_menu</span>
+              <span v-if="!isCollapsed">Menu</span>
+            </Link>
           </li>
-          <!-- Add more links as needed -->
+          <li>
+            <Link href="/admin/orders" class="flex items-center py-2 px-4 hover:bg-gray-700 transition-all">
+              <span class="material-icons mr-2">receipt</span>
+              <span v-if="!isCollapsed">Orders</span>
+            </Link>
+          </li>
         </ul>
       </nav>
     </aside>
   </template>
 
   <script>
+  import { ref, computed } from 'vue';
+  import { Link } from '@inertiajs/vue3';
+
   export default {
-    name: "Sidebar",
+    components: { Link },
+    setup() {
+      const isCollapsed = ref(false); // Sidebar is expanded by default
+
+      const toggleSidebar = () => {
+        isCollapsed.value = !isCollapsed.value;
+      };
+
+      const sidebarClass = computed(() => {
+        return isCollapsed.value ? 'w-16' : 'w-64'; // Change width based on collapsed state
+      });
+
+      return { isCollapsed, toggleSidebar, sidebarClass };
+    }
   };
   </script>
 
   <style scoped>
   .material-icons {
-    margin-right: 8px;
+    font-size: 24px; /* Adjust icon size */
   }
   </style>
