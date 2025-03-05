@@ -1,23 +1,23 @@
 <?php
-
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Order;
-use App\Models\User;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class OrderController extends Controller
 {
-    public function index()
+    public function index(): Response
     {
         $orders = Order::with('user')->orderBy('ordered_at', 'desc')->get();
-        return view('admin.orders.index', compact('orders'));
+        return Inertia::render('Admin/Orders/Index', ['orders' => $orders]);
     }
 
-    public function show(Order $order)
+    public function show(Order $order): Response
     {
-        return view('admin.orders.show', compact('order'));
+        return Inertia::render('Admin/Orders/Show', ['order' => $order]);
     }
 
     public function update(Request $request, Order $order)
