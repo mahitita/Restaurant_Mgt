@@ -81,7 +81,15 @@ Route::prefix('admin')->group(function () {
     Route::get('/categories/{category}/edit', [CategoryController::class, 'edit'])->name('admin.categories.edit');
     Route::put('/categories/{category}', [CategoryController::class, 'update'])->name('admin.categories.update');
     Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('admin.categories.destroy');
-});
+
+        Route::get('/menus', [MenuController::class, 'index'])->name('admin.menus');
+        Route::get('/menus/create', [MenuController::class, 'create'])->name('admin.menus.create');
+        Route::post('/menus', [MenuController::class, 'store'])->name('admin.menus.store');
+        Route::get('/menus/{menu}/edit', [MenuController::class, 'edit'])->name('admin.menus.edit');
+        Route::put('/menus/{menu}', [MenuController::class, 'update'])->name('admin.menus.update');
+        Route::delete('/menus/{menu}', [MenuController::class, 'destroy'])->name('admin.menus.destroy');
+    });
+
 
 Route::get('/', function () {
     return Inertia::render('Home');

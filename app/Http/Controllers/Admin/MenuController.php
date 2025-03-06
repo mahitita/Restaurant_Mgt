@@ -24,7 +24,7 @@ class MenuController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|unique:menu_items,name',
+            'name' => 'required|string|unique:menus,name',
             'price' => 'required|numeric',
             'category_id' => 'required|exists:categories,id',
             'description' => 'nullable|string',
@@ -43,7 +43,7 @@ class MenuController extends Controller
             'image' => $imagePath ?? null,
         ]);
 
-        return redirect()->route('Admin.Menu.index')->with('success', 'Menu item created successfully.');
+        return redirect()->route('admin.menus')->with('success', 'Menu item created successfully.');
     }
 
     public function edit(Menu $menu)
@@ -55,7 +55,7 @@ class MenuController extends Controller
     public function update(Request $request, Menu $menu)
     {
         $request->validate([
-            'name' => 'required|string|unique:menu_items,name,' . $menu->id,
+            'name' => 'required|string|unique:menus,name,' . $menu->id,
             'price' => 'required|numeric',
             'category_id' => 'required|exists:categories,id',
             'description' => 'nullable|string',
@@ -63,7 +63,7 @@ class MenuController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('menu_items', 'public');
+            $imagePath = $request->file('image')->store('menus', 'public');
             // Delete old image if it exists
             if ($menu->image) {
                 unlink(storage_path('app/public/' . $menu->image));
@@ -78,7 +78,7 @@ class MenuController extends Controller
             'image' => $imagePath ?? $menu->image,
         ]);
 
-        return redirect()->route('Admin.Menu.index')->with('success', 'Menu item updated successfully.');
+        return redirect()->route('admin.menus')->with('success', 'Menu item updated successfully.');
     }
 
     public function destroy(Menu $menu)
@@ -89,6 +89,6 @@ class MenuController extends Controller
         }
 
         $menu->delete();
-        return redirect()->route('Admin.Menu.index')->with('success', 'Menu item deleted successfully.');
+        return redirect()->route('admin.menus')->with('success', 'Menu item deleted successfully.');
     }
 }

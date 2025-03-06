@@ -1,72 +1,82 @@
-<script setup>
-import { ref } from "vue";
-import { router } from "@inertiajs/vue3";
-import AdminLayout from "@/Layouts/AdminLayout.vue";
-defineProps({ orders: Array });
-
-const updateStatus = (order, newStatus) => {
-    router.patch(`/admin/orders/${order.id}/status`, { status: newStatus }, {
-        preserveScroll: true,
-        onSuccess: () => alert("Order status updated!"),
-    });
-};
-</script>
-
 <template>
     <AdminLayout>
-    <div class="max-w-6xl mx-auto p-6 bg-white shadow-md rounded-lg">
-        <h2 class="text-2xl font-bold mb-4 text-gray-700">Order Management</h2>
+      <div class="p-6 bg-white shadow rounded-lg">
+        <h1 class="text-2xl font-semibold mb-4">Menu Items</h1>
 
+        <!-- Add Menu Button -->
+        <Link
+          :href="route('admin.menus.create')"
+          class="mb-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          + Add Menu Item
+        </Link>
+
+        <!-- Success Message -->
+        <div v-if="successMessage" class="p-3 bg-green-200 text-green-800 rounded mb-4">
+          {{ successMessage }}
+        </div>
+
+        <!-- Menu Table -->
         <table class="w-full border-collapse border border-gray-300">
-            <thead class="bg-gray-200">
-                <tr>
-                    <th class="border p-2">Order ID</th>
-                    <th class="border p-2">Customer</th>
-                    <th class="border p-2">Order Type</th>
-                    <th class="border p-2">Total Price</th>
-                    <th class="border p-2">Status</th>
-                    <th class="border p-2">Items</th>
-                    <th class="border p-2">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr v-for="order in orders" :key="order.id" class="border text-center">
-                    <td class="p-2">{{ order.id }}</td>
-                    <td class="p-2">{{ order.user ? order.user.name : "Guest" }}</td>
-                    <td class="p-2">{{ order.order_type }}</td>
-                    <td class="p-2">${{ order.total_price }}</td>
-                    <td class="p-2">
-                        <span :class="{
-                            'text-yellow-500': order.status === 'pending',
-                            'text-blue-500': order.status === 'preparing',
-                            'text-green-500': order.status === 'ready',
-                            'text-purple-500': order.status === 'completed',
-                            'text-red-500': order.status === 'cancelled'
-                        }">
-                            {{ order.status }}
-                        </span>
-                    </td>
-                    <td class="p-2">
-                        <ul>
-                            <li v-for="item in order.order_items" :key="item.id">
-                                {{ item.menu.name }} x {{ item.quantity }} (${{ item.price }})
-                            </li>
-                        </ul>
-                    </td>
-                    <td class="p-2">
-                        <select @change="updateStatus(order, $event.target.value)" class="border p-1 rounded">
-                            <option disabled selected>Update Status</option>
-                            <option value="pending">Pending</option>
-                            <option value="preparing">Preparing</option>
-                            <option value="ready">Ready</option>
-                            <option value="completed">Completed</option>
-                            <option value="cancelled">Cancelled</option>
-                        </select>
-                    </td>
-                </tr>
-            </tbody>
+          <thead>
+            <tr class="bg-gray-100">
+              <th class="border border-gray-300 p-2">#</th>
+              <th class="border border-gray-300 p-2">Name</th>
+              <th class="border border-gray-300 p-2">Category</th>
+              <th class="border border-gray-300 p-2">Price</th>
+              <th class="border border-gray-300 p-2">Image</th>
+              <th class="border border-gray-300 p-2">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(menu, index) in menus" :key="menu.id">
+              <td class="border border-gray-300 p-2">{{ index + 1 }}</td>
+              <td class="border border-gray-300 p-2">{{ menu.name }}</td>
+              <td class="border border-gray-300 p-2">{{ menu.category.name }}</td>
+              <td class="border border-gray-300 p-2">${{ menu.price }}</td>
+              <td class="border border-gray-300 p-2">
+                <img v-if="menu.image" :src="`/storage/${menu.image}`" class="w-16 h-16 object-cover rounded" />
+                <span v-else>No Image</span>
+              </td>
+              <td class="border border-gray-300 p-2">
+                <Link
+                  :href="route('admin.menus.edit', menu.id)"
+                  class="bg-yellow-500 text-white px-3 py-1 rounded mr-2"
+                >
+                  Edit
+                </Link>
+                <button
+                  @click="deleteMenu(menu.id)"
+                  class="bg-red-500 text-white px-3 py-1 rounded"
+                >
+                  Delete
+                </button>
+              </td>
+            </tr>
+          </tbody>
         </table>
-    </div>
-</AdminLayout>
-</template>
+      </div>
+    </AdminLayout>
+  </template>
 
+  <script>
+import AdminLayout from "@/Layouts/AdminLayout.vue";
+  import { router, Link } from "@inertiajs/vue3";
+
+  export default {
+    components: { AdminLayout, Link },
+    props: { menus: Array },
+    data() {
+      return { successMessage: "" };
+    },
+    methods: {
+      deleteMenu(id) {
+        if (confirm("Are you sure?")) {
+          router.delete(route("admin.menus.destroy", id), {
+            onSuccess: () => (this.successMessage = "Menu item deleted successfully."),
+          });
+        }
+      },
+    },
+  };
+  </script>
