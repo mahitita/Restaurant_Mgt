@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Application;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\MenuController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\HelloWorldController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\AdminCategoryController;
@@ -60,7 +61,15 @@ Route::prefix('admin')->group(function () {
                 Route::get('/reservations/{reservation}', [ReservationController::class, 'show'])->name('admin.reservations.show');
                 Route::put('/reservations/{reservation}', [ReservationController::class, 'update'])->name('admin.reservations.update');
                 Route::delete('/reservations/{reservation}', [ReservationController::class, 'destroy'])->name('admin.reservations.destroy');
-            });
+
+                    Route::get('/users', [UserController::class, 'index'])->name('admin.users.index');
+                    Route::get('/users/create', [UserController::class, 'create'])->name('admin.users.create');
+                    Route::post('/users', [UserController::class, 'store'])->name('admin.users.store');
+                    Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('admin.users.edit');
+                    Route::put('/users/{user}', [UserController::class, 'update'])->name('admin.users.update');
+                    Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('admin.users.destroy');
+                });
+
 
 
 
