@@ -1,43 +1,56 @@
-<script setup>
-import AppLayout from '@/Layouts/AppLayout.vue'
-</script>
-
 <template>
-  <AppLayout>
-    <div class="bg-cover bg-center h-screen" style="background-image: url('path/to/your/hero-image.jpg');">
-      <div class="flex items-center justify-center h-full bg-black bg-opacity-50">
-        <div class="text-center text-white">
-          <h1 class="text-5xl md:text-6xl font-bold">Welcome to Our Restaurant Management System</h1>
-          <p class="text-lg md:text-xl mt-4">Manage orders, reservations, and queues efficiently.</p>
-          <router-link to="/features" class="mt-6 inline-block bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700 transition">
-            Discover Features
+    <UserLayout>
+      <!-- Hero Section -->
+      <section class="relative h-screen flex items-center justify-center bg-cover bg-center"
+               style="background-image: url('/images/restaurant-hero.jpg')">
+        <div class="bg-black bg-opacity-50 text-white text-center p-6 rounded-lg">
+          <h1 class="text-5xl font-bold mb-4">Welcome to Royal Feast</h1>
+          <p class="text-lg mb-6">Experience world-class dining with the best chefs in town.</p>
+          <router-link :href="route('menu')" class="bg-red-500 px-6 py-3 rounded-lg text-white text-lg">
+            View Menu
           </router-link>
         </div>
-      </div>
-    </div>
+      </section>
 
-    <div class="py-10 px-4">
-      <h2 class="text-3xl font-bold text-center">Key Features</h2>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-        <div class="bg-white rounded shadow p-6 text-center">
-          <h3 class="text-xl font-semibold">Order Management</h3>
-          <p class="text-gray-600 mt-2">Take orders for dine-in, takeout, and delivery.</p>
+      <!-- Featured Dishes Section -->
+      <section class="py-16 bg-gray-100">
+        <div class="container mx-auto px-4">
+          <h2 class="text-3xl font-semibold text-center mb-8">Our Special Dishes</h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div v-for="dish in featuredDishes" :key="dish.id" class="bg-white p-4 shadow rounded-lg">
+              <img :src="dish.image" alt="dish.name" class="w-full h-40 object-cover rounded">
+              <h3 class="text-xl font-semibold mt-4">{{ dish.name }}</h3>
+              <p class="text-gray-600">{{ dish.description }}</p>
+              <span class="text-red-500 font-bold text-lg">${{ dish.price }}</span>
+            </div>
+          </div>
         </div>
-        <div class="bg-white rounded shadow p-6 text-center">
-          <h3 class="text-xl font-semibold">Menu Management</h3>
-          <p class="text-gray-600 mt-2">Add and manage food items and categories.</p>
-        </div>
-        <div class="bg-white rounded shadow p-6 text-center">
-          <h3 class="text-xl font-semibold">Table Reservation</h3>
-          <p class="text-gray-600 mt-2">Book tables in advance for a seamless experience.</p>
-        </div>
-      </div>
-    </div>
-  </AppLayout>
-</template>
+      </section>
 
-<style scoped>
-.bg-cover {
-  background-size: cover;
-}
-</style>
+      <!-- Call to Action -->
+      <section class="py-12 bg-red-500 text-white text-center">
+        <h2 class="text-3xl font-bold">Reserve Your Table Now</h2>
+        <p class="text-lg mt-2">Enjoy the finest dining experience with us.</p>
+        <router-link :href="route('reservation')" class="mt-4 bg-white text-red-500 px-6 py-3 rounded-lg inline-block">
+          Make a Reservation
+        </router-link>
+      </section>
+    </UserLayout>
+  </template>
+
+  <script>
+  import UserLayout from "../Layouts/UserLayout.vue";
+
+  export default {
+    components: { UserLayout },
+    data() {
+      return {
+        featuredDishes: [
+          { id: 1, name: "Grilled Steak", description: "Juicy grilled steak with special sauce", price: 25, image: "/images/steak.jpg" },
+          { id: 2, name: "Pasta Primavera", description: "Fresh veggies and pasta in a creamy sauce", price: 18, image: "/images/pasta.jpg" },
+          { id: 3, name: "Sushi Platter", description: "A selection of the finest sushi rolls", price: 30, image: "/images/sushi.jpg" }
+        ]
+      };
+    }
+  };
+  </script>

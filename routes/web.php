@@ -4,11 +4,13 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Application;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\User\HomeController;
 use App\Http\Controllers\Admin\MenuController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\HelloWorldController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\AdminCategoryController;
+use App\Http\Controllers\User\UserMenuController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ReservationController;
@@ -36,9 +38,7 @@ use App\Http\Controllers\Admin\ReservationController;
 
 Route::prefix('admin')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
-//});
 
-//Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::get('/categories', [CategoryController::class, 'index'])->name('admin.categories.index');
     Route::post('/categories', [CategoryController::class, 'store'])->name('admin.categories.store');
     Route::get('/categories/{category}/edit', [CategoryController::class, 'edit'])->name('admin.categories.edit');
@@ -68,23 +68,15 @@ Route::prefix('admin')->group(function () {
                     Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('admin.users.edit');
                     Route::put('/users/{user}', [UserController::class, 'update'])->name('admin.users.update');
                     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('admin.users.destroy');
-                });
-
-
-
-
-
-Route::get('/', function () {
-    return Inertia::render('Home');
 });
-Route::get('/about', function () {
-    return Inertia::render('About');
-});
-//Route::get('/', [HelloWorldController::class, 'index'])->name('myhome');
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+
+
+Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/menu', [UserMenuController::class, 'index'])->name('menu');
+Route::get('/reservation', [HomeController::class, 'index'])->name('reservation');
+
+
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

@@ -9,7 +9,6 @@ class HomeController extends Controller
 {
     public function index()
     {
-        $menus = Menu::take(6)->get(); // Show top 6 menu items
-        return inertia('Home', ['menus' => $menus]);
+        return inertia('Home');
     }
 }
