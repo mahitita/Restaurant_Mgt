@@ -1,56 +1,86 @@
-<script setup>
-import { ref } from "vue";
-import { router } from "@inertiajs/vue3";
-
-defineProps({ orders: Array });
-
-const updateStatus = (order, newStatus) => {
-    router.patch(`/admin/orders/${order.id}/status`, { status: newStatus }, {
-        preserveScroll: true,
-        onSuccess: () => alert("Order status updated!"),
-    });
-};
-</script>
-
 <template>
-    <div class="max-w-4xl mx-auto p-6 bg-white shadow-md rounded-lg">
-        <h2 class="text-2xl font-bold mb-4 text-gray-700">Order Management</h2>
+    <AdminLayout>
+      <div class="p-6 bg-white shadow rounded-lg">
+        <h1 class="text-2xl font-semibold mb-4">Orders</h1>
+
+        <!-- Success Message -->
+        <div v-if="successMessage" class="p-3 bg-green-200 text-green-800 rounded mb-4">
+          {{ successMessage }}
+        </div>
+
+        <!-- Orders Table -->
         <table class="w-full border-collapse border border-gray-300">
-            <thead class="bg-gray-200">
-                <tr>
-                    <th class="border p-2">ID</th>
-                    <th class="border p-2">Order Type</th>
-                    <th class="border p-2">Total Price</th>
-                    <th class="border p-2">Status</th>
-                    <th class="border p-2">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr v-for="order in orders" :key="order.id" class="border text-center">
-                    <td class="p-2">{{ order.id }}</td>
-                    <td class="p-2">{{ order.order_type }}</td>
-                    <td class="p-2">${{ order.total_price }}</td>
-                    <td class="p-2">
-                        <span :class="{
-                            'text-yellow-500': order.status === 'Pending',
-                            'text-blue-500': order.status === 'Preparing',
-                            'text-green-500': order.status === 'Completed',
-                            'text-red-500': order.status === 'Canceled'
-                        }">
-                            {{ order.status }}
-                        </span>
-                    </td>
-                    <td class="p-2">
-                        <select @change="updateStatus(order, $event.target.value)" class="border p-1 rounded">
-                            <option disabled selected>Update Status</option>
-                            <option value="Pending">Pending</option>
-                            <option value="Preparing">Preparing</option>
-                            <option value="Completed">Completed</option>
-                            <option value="Canceled">Canceled</option>
-                        </select>
-                    </td>
-                </tr>
-            </tbody>
+          <thead>
+            <tr class="bg-gray-100">
+              <th class="border border-gray-300 p-2">#</th>
+              <th class="border border-gray-300 p-2">Customer</th>
+              <th class="border border-gray-300 p-2">Total</th>
+              <th class="border border-gray-300 p-2">Status</th>
+              <th class="border border-gray-300 p-2">Date</th>
+              <th class="border border-gray-300 p-2">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(order, index) in orders" :key="order.id">
+              <td class="border border-gray-300 p-2">{{ index + 1 }}</td>
+              <td class="border border-gray-300 p-2">{{ order.user.name }}</td>
+              <td class="border border-gray-300 p-2">${{ order.total }}</td>
+              <td class="border border-gray-300 p-2">
+                <span class="px-2 py-1 rounded" :class="statusClass(order.status)">
+                  {{ order.status }}
+                </span>
+              </td>
+              <td class="border border-gray-300 p-2">{{ formatDate(order.created_at) }}</td>
+              <td class="border border-gray-300 p-2">
+                <Link
+                  :href="route('admin.orders.show', order.id)"
+                  class="bg-blue-500 text-white px-3 py-1 rounded mr-2"
+                >
+                  View
+                </Link>
+                <button
+                  @click="deleteOrder(order.id)"
+                  class="bg-red-500 text-white px-3 py-1 rounded"
+                >
+                  Delete
+                </button>
+              </td>
+            </tr>
+          </tbody>
         </table>
-    </div>
-</template>
+      </div>
+    </AdminLayout>
+  </template>
+
+  <script>
+import AdminLayout from "@/Layouts/AdminLayout.vue";
+  import { router, Link } from "@inertiajs/vue3";
+
+  export default {
+    components: { AdminLayout, Link },
+    props: { orders: Array },
+    data() {
+      return { successMessage: "" };
+    },
+    methods: {
+      deleteOrder(id) {
+        if (confirm("Are you sure?")) {
+          router.delete(route("admin.orders.destroy", id), {
+            onSuccess: () => (this.successMessage = "Order deleted successfully."),
+          });
+        }
+      },
+      statusClass(status) {
+        return {
+          pending: "bg-yellow-200 text-yellow-800",
+          processing: "bg-blue-200 text-blue-800",
+          completed: "bg-green-200 text-green-800",
+          cancelled: "bg-red-200 text-red-800",
+        }[status];
+      },
+      formatDate(date) {
+        return new Date(date).toLocaleDateString();
+      },
+    },
+  };
+  </script>

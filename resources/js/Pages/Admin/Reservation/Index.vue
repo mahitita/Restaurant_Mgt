@@ -1,57 +1,84 @@
-<script setup>
-import { ref } from "vue";
-import { router } from "@inertiajs/vue3";
-
-defineProps({ reservations: Array });
-
-const updateStatus = (reservation, newStatus) => {
-    router.patch(`/admin/reservations/${reservation.id}/status`, { status: newStatus }, {
-        preserveScroll: true,
-        onSuccess: () => alert("Reservation status updated!"),
-    });
-};
-</script>
-
 <template>
-    <div class="max-w-6xl mx-auto p-6 bg-white shadow-md rounded-lg">
-        <h2 class="text-2xl font-bold mb-4 text-gray-700">Table Reservations</h2>
+    <AdminLayout>
+      <div class="p-6 bg-white shadow rounded-lg">
+        <h1 class="text-2xl font-semibold mb-4">Reservations</h1>
 
+        <!-- Success Message -->
+        <div v-if="successMessage" class="p-3 bg-green-200 text-green-800 rounded mb-4">
+          {{ successMessage }}
+        </div>
+
+        <!-- Reservations Table -->
         <table class="w-full border-collapse border border-gray-300">
-            <thead class="bg-gray-200">
-                <tr>
-                    <th class="border p-2">Reservation ID</th>
-                    <th class="border p-2">Customer</th>
-                    <th class="border p-2">Table</th>
-                    <th class="border p-2">Reservation Time</th>
-                    <th class="border p-2">Status</th>
-                    <th class="border p-2">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr v-for="reservation in reservations" :key="reservation.id" class="border text-center">
-                    <td class="p-2">{{ reservation.id }}</td>
-                    <td class="p-2">{{ reservation.user ? reservation.user.name : "Guest" }}</td>
-                    <td class="p-2">{{ reservation.table.name }}</td>
-                    <td class="p-2">{{ new Date(reservation.reservation_time).toLocaleString() }}</td>
-                    <td class="p-2">
-                        <span :class="{
-                            'text-yellow-500': reservation.status === 'pending',
-                            'text-blue-500': reservation.status === 'confirmed',
-                            'text-red-500': reservation.status === 'cancelled'
-                        }">
-                            {{ reservation.status }}
-                        </span>
-                    </td>
-                    <td class="p-2">
-                        <select @change="updateStatus(reservation, $event.target.value)" class="border p-1 rounded">
-                            <option disabled selected>Update Status</option>
-                            <option value="pending">Pending</option>
-                            <option value="confirmed">Confirmed</option>
-                            <option value="cancelled">Cancelled</option>
-                        </select>
-                    </td>
-                </tr>
-            </tbody>
+          <thead>
+            <tr class="bg-gray-100">
+              <th class="border border-gray-300 p-2">#</th>
+              <th class="border border-gray-300 p-2">Customer</th>
+              <th class="border border-gray-300 p-2">Date</th>
+              <th class="border border-gray-300 p-2">Status</th>
+              <th class="border border-gray-300 p-2">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(reservation, index) in reservations" :key="reservation.id">
+              <td class="border border-gray-300 p-2">{{ index + 1 }}</td>
+              <td class="border border-gray-300 p-2">{{ reservation.user.name }}</td>
+              <td class="border border-gray-300 p-2">{{ formatDate(reservation.date) }}</td>
+              <td class="border border-gray-300 p-2">
+                <span class="px-2 py-1 rounded" :class="statusClass(reservation.status)">
+                  {{ reservation.status }}
+                </span>
+              </td>
+              <td class="border border-gray-300 p-2">
+                <Link
+                  :href="route('admin.reservations.show', reservation.id)"
+                  class="bg-blue-500 text-white px-3 py-1 rounded mr-2"
+                >
+                  View
+                </Link>
+                <button
+                  @click="deleteReservation(reservation.id)"
+                  class="bg-red-500 text-white px-3 py-1 rounded"
+                >
+                  Delete
+                </button>
+              </td>
+            </tr>
+          </tbody>
         </table>
-    </div>
-</template>
+      </div>
+    </AdminLayout>
+  </template>
+
+  <script>
+  import AdminLayout from "@/Layouts/AdminLayout.vue";
+  import { router, Link } from "@inertiajs/vue3";
+
+  export default {
+    components: { AdminLayout, Link },
+    props: { reservations: Array },
+    data() {
+      return { successMessage: "" };
+    },
+    methods: {
+      deleteReservation(id) {
+        if (confirm("Are you sure?")) {
+          router.delete(route("admin.reservations.destroy", id), {
+            onSuccess: () => (this.successMessage = "Reservation deleted successfully."),
+          });
+        }
+      },
+      statusClass(status) {
+        return {
+          pending: "bg-yellow-200 text-yellow-800",
+          confirmed: "bg-blue-200 text-blue-800",
+          completed: "bg-green-200 text-green-800",
+          cancelled: "bg-red-200 text-red-800",
+        }[status];
+      },
+      formatDate(date) {
+        return new Date(date).toLocaleDateString();
+      },
+    },
+  };
+  </script>
