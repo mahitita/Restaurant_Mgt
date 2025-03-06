@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\AdminCategoryController;
 use App\Http\Controllers\User\UserMenuController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\User\UserOrderController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ReservationController;
 
@@ -75,6 +76,12 @@ Route::prefix('admin')->group(function () {
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/menu', [UserMenuController::class, 'index'])->name('menu');
 Route::get('/reservation', [HomeController::class, 'index'])->name('reservation');
+
+    Route::inertia('/cart', 'Cart')->name('cart.index');
+    Route::get('/orders', [UserOrderController::class, 'index'])->name('orders.index');
+
+    Route::post('/orders/store', [UserOrderController::class, 'store'])->name('orders.store');
+
 
 
 
