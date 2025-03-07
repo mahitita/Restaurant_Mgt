@@ -17,6 +17,8 @@
         "vue": "^3.4.0"
     },
     "dependencies": {
-        "pinia": "^3.0.1"
+        "@inertiajs/inertia": "^0.11.1",
+        "pinia": "^3.0.1",
+        "pinia-plugin-persistedstate": "^4.2.0"
     }
 }

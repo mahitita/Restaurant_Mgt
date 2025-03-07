@@ -1,5 +1,6 @@
 <template>
     <UserLayout>
+      <!-- Hero Section -->
       <section class="relative h-64 flex items-center justify-center bg-cover bg-center"
                style="background-image: url('/images/menu-hero.jpg')">
         <div class="bg-black bg-opacity-50 text-white text-center p-6 rounded-lg">
@@ -8,6 +9,7 @@
         </div>
       </section>
 
+      <!-- Category Filter -->
       <div class="container mx-auto py-8 px-4">
         <h2 class="text-2xl font-semibold mb-4">Filter by Category</h2>
         <div class="flex space-x-4 overflow-x-auto pb-4">
@@ -21,6 +23,14 @@
         </div>
       </div>
 
+      <!-- Success Message -->
+      <transition name="fade">
+        <div v-if="showSuccess" class="fixed top-5 right-5 bg-green-500 text-white px-4 py-2 rounded shadow-lg">
+          {{ successMessage }}
+        </div>
+      </transition>
+
+      <!-- Menu Items -->
       <section class="container mx-auto py-8 px-4">
         <div v-if="filteredMenus.length === 0" class="text-center text-gray-500">
           No items found in this category.
@@ -38,33 +48,61 @@
         </div>
       </section>
     </UserLayout>
-  </template>
+</template>
 
-  <script>
-  import { useCartStore } from "../Stores/CartStore"; // Make sure to import the store correctly
-import UserLayout from "@/Layouts/UserLayout.vue";
-  export default {
+<script>
+import UserLayout from "../Layouts/UserLayout.vue";
+import { useCartStore } from "../Stores/CartStore";
+import { ref } from "vue";
+
+export default {
     components: { UserLayout },
     props: {
-      menus: Array,
-      categories: Array
+        menus: Array,
+        categories: Array
     },
-    data() {
-      return {
-        filteredMenus: this.menus
-      };
-    },
-    methods: {
-      filterMenu(categoryId) {
-        this.filteredMenus = categoryId
-          ? this.menus.filter(menu => menu.category_id === categoryId)
-          : this.menus;
-      },
-      addToCart(menu) {
-        const cartStore = useCartStore(); // Initialize the store
-        cartStore.addToCart(menu); // Add the item to the cart store
-        console.log("Cart items:", cartStore.cartItems); // Log cart items after adding
-      }
+    setup(props) {
+        const cartStore = useCartStore();
+        const filteredMenus = ref(props.menus);
+        const showSuccess = ref(false);
+        const successMessage = ref("");
+
+        const filterMenu = (categoryId) => {
+            filteredMenus.value = categoryId
+                ? props.menus.filter(menu => menu.category_id === categoryId)
+                : props.menus;
+        };
+
+        const addToCart = (menu) => {
+            cartStore.addToCart(menu);
+
+            // Show success message
+            successMessage.value = `${menu.name} added to cart!`;
+            showSuccess.value = true;
+
+            // Hide message after 3 seconds
+            setTimeout(() => {
+                showSuccess.value = false;
+            }, 3000);
+        };
+
+        return {
+            filteredMenus,
+            filterMenu,
+            addToCart,
+            showSuccess,
+            successMessage,
+        };
     }
-  };
-  </script>
+};
+</script>
+
+<style>
+/* Fade transition */
+.fade-enter-active, .fade-leave-active {
+    transition: opacity 0.5s;
+}
+.fade-enter, .fade-leave-to {
+    opacity: 0;
+}
+</style>

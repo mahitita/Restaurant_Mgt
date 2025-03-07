@@ -23,7 +23,7 @@ defineProps({ orders: Array });
                 <tbody>
                     <tr v-for="order in orders" :key="order.id">
                         <td class="p-2">{{ order.id }}</td>
-                        <td class="p-2">${{ order.total_price.toFixed(2) }}</td>
+                        <td class="p-2">${{ order.total_price }}</td>
                         <td class="p-2">{{ order.status }}</td>
                         <td class="p-2">{{ order.created_at }}</td>
                     </tr>
