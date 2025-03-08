@@ -15,16 +15,20 @@ return new class extends Migration
             $table->id();
             $table->string('table_number')->unique();
             $table->integer('seats');
+            $table->integer('x_coordinate');
+            $table->integer('y_coordinate');
+            $table->integer('width')->default(100); // Default width for rectangular tables
+            $table->integer('height')->default(60); // Default height for rectangular tables
+            $table->enum('type', ['rectangle', 'round', 'oval', 'square' ])->default('rectangle'); // Table type
             $table->enum('status', ['available', 'reserved', 'occupied'])->default('available');
             $table->timestamps();
         });
     }
 
-
     /**
      * Reverse the migrations.
      */
-    public function down(): void
+    public function down()
     {
         Schema::dropIfExists('tables');
     }
