@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\TableController;
 use App\Http\Controllers\AdminCategoryController;
 use App\Http\Controllers\User\UserMenuController;
+use App\Http\Controllers\User\UserTableController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\User\UserOrderController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -91,6 +92,8 @@ Route::get('/reservation', [HomeController::class, 'index'])->name('reservation'
 
     Route::post('/orders/store', [UserOrderController::class, 'store'])->name('orders.store');
 
+    Route::get('/tables', [UserTableController::class, 'index'])->name('tables.index');
+    Route::post('/tables/reserve', [UserTableController::class, 'reserve'])->name('tables.reserve');
 
 
 
