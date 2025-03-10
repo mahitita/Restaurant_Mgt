@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\MenuController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\HelloWorldController;
 use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\TableController;
 use App\Http\Controllers\AdminCategoryController;
 use App\Http\Controllers\User\UserMenuController;
 use App\Http\Controllers\Admin\CategoryController;
@@ -69,6 +70,14 @@ Route::prefix('admin')->group(function () {
                     Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('admin.users.edit');
                     Route::put('/users/{user}', [UserController::class, 'update'])->name('admin.users.update');
                     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('admin.users.destroy');
+
+    Route::get('/tables', [TableController::class, 'index'])->name('admin.tables.index');
+    Route::get('/tables/create', [TableController::class, 'create'])->name('admin.tables.create');
+    Route::post('/tables', [TableController::class, 'store'])->name('admin.tables.store');
+    Route::get('/tables/{table}/edit', [TableController::class, 'edit'])->name('admin.tables.edit');
+    Route::put('/tables/{table}', [TableController::class, 'update'])->name('admin.tables.update');
+    Route::delete('/tables/{table}', [TableController::class, 'destroy'])->name('admin.tables.destroy');
+
 });
 
 
