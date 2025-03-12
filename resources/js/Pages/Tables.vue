@@ -1,10 +1,13 @@
 <template>
     <div class="container mx-auto px-4 py-8">
       <h1 class="text-2xl font-bold mb-4">Select Your Table</h1>
-      <svg viewBox="0 0 800 600" class="w-full h-auto border rounded-lg shadow-lg">
-        <!-- Render each table as an SVG element -->
+
+      <!-- Debugging: Show tables count -->
+      <p class="mb-4 text-gray-600">Total Tables: {{ tables.length }}</p>
+
+      <svg viewBox="0 0 1000 600" class="w-full h-auto border rounded-lg shadow-lg">
         <g v-for="table in tables" :key="table.id" @click="selectTable(table)" style="cursor: pointer">
-          <!-- Render rectangle tables -->
+          <!-- Rectangle Tables -->
           <template v-if="table.type === 'rectangle'">
             <rect
               :x="table.x_coordinate"
@@ -17,17 +20,19 @@
               ry="10"
             />
           </template>
-          <!-- Render round tables -->
+
+          <!-- Round Tables -->
           <template v-else-if="table.type === 'round'">
             <circle
               :cx="table.x_coordinate"
               :cy="table.y_coordinate"
-              :r="(table.width || 60) / 2"
+              :r="table.width / 2"
               :fill="selectedTable === table.id ? 'green' : table.status === 'available' ? '#90EE90' : '#D3D3D3'"
               stroke="black"
             />
           </template>
-          <!-- Render oval tables -->
+
+          <!-- Oval Tables -->
           <template v-else-if="table.type === 'oval'">
             <ellipse
               :cx="table.x_coordinate + table.width / 2"
@@ -38,7 +43,8 @@
               stroke="black"
             />
           </template>
-          <!-- Render square tables -->
+
+          <!-- Square Tables -->
           <template v-else-if="table.type === 'square'">
             <rect
               :x="table.x_coordinate"
@@ -51,6 +57,7 @@
               ry="10"
             />
           </template>
+
           <!-- Table Number -->
           <text
             :x="table.x_coordinate + (table.type === 'rectangle' ? table.width / 2 : 0)"
@@ -63,6 +70,7 @@
           >
             {{ table.table_number }}
           </text>
+
           <!-- Chairs -->
           <circle
             v-for="chair in getChairs(table)"
@@ -74,6 +82,8 @@
           />
         </g>
       </svg>
+
+      <!-- Selected Table Info -->
       <div v-if="selectedTable" class="mt-4 p-4 bg-green-100 border border-green-400 rounded-lg">
         <p class="text-lg">You have selected Table {{ selectedTable }}</p>
         <button @click="reserveTable" class="bg-blue-500 text-white px-4 py-2 rounded">Reserve Table</button>
@@ -84,12 +94,18 @@
   <script setup>
   import { ref, onMounted } from 'vue';
   import { Inertia } from '@inertiajs/inertia';
-import { usePage } from '@inertiajs/vue3';
+  import { usePage } from '@inertiajs/vue3';
+
   const tables = ref([]);
   const selectedTable = ref(null);
 
   const { props } = usePage();
   tables.value = props.tables;
+
+  // Debugging: Check if tables are loading
+  onMounted(() => {
+    console.log("Tables Loaded:", tables.value);
+  });
 
   const selectTable = (table) => {
     if (table.status !== 'available') {
@@ -105,28 +121,31 @@ import { usePage } from '@inertiajs/vue3';
 
   const getChairs = (table) => {
     const chairs = [];
-    const chairSpacing = 20;
+    const chairSpacing = 30;
 
-    // Calculate chair positions based on table dimensions and number of seats
     if (table.type === 'rectangle' || table.type === 'square') {
-      for (let i = 0; i < table.seats; i++) {
-        let x, y;
-        if (i < table.seats / 2) {
-          x = table.x_coordinate - chairSpacing;
-          y = table.y_coordinate + (i * (table.height / (table.seats / 2))) + (table.height / (table.seats / 4));
-        } else {
-          x = table.x_coordinate + table.width + chairSpacing;
-          y = table.y_coordinate + ((i - table.seats / 2) * (table.height / (table.seats / 2))) + (table.height / (table.seats / 4));
-        }
-        chairs.push({ id: `chair-${table.id}-${i}`, x, y });
+      // Chairs on left and right
+      for (let i = 0; i < table.seats / 2; i++) {
+        chairs.push({
+          id: `chair-${table.id}-left-${i}`,
+          x: table.x_coordinate - chairSpacing,
+          y: table.y_coordinate + (i + 1) * (table.height / (table.seats / 2))
+        });
+        chairs.push({
+          id: `chair-${table.id}-right-${i}`,
+          x: table.x_coordinate + table.width + chairSpacing,
+          y: table.y_coordinate + (i + 1) * (table.height / (table.seats / 2))
+        });
       }
     } else if (table.type === 'round' || table.type === 'oval') {
-      const radius = (table.width || 60) / 2 + chairSpacing;
+      const radius = (table.width / 2) + chairSpacing;
       for (let i = 0; i < table.seats; i++) {
         const angle = (i * 360 / table.seats) * (Math.PI / 180);
-        const x = table.x_coordinate + radius * Math.cos(angle);
-        const y = table.y_coordinate + radius * Math.sin(angle);
-        chairs.push({ id: `chair-${table.id}-${i}`, x, y });
+        chairs.push({
+          id: `chair-${table.id}-${i}`,
+          x: table.x_coordinate + radius * Math.cos(angle),
+          y: table.y_coordinate + radius * Math.sin(angle)
+        });
       }
     }
 
@@ -135,13 +154,14 @@ import { usePage } from '@inertiajs/vue3';
   </script>
 
   <style scoped>
-  /* Custom styles for better UI */
+  /* SVG Container */
   svg {
-    max-width: 800px;
+    max-width: 1000px;
     max-height: 600px;
   }
 
-  rect {
+  /* Table Hover Effect */
+  rect, circle, ellipse {
     transition: fill 0.3s ease;
   }
 

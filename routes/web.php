@@ -1,6 +1,7 @@
 <?php
 
 use Inertia\Inertia;
+use App\Models\Table;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Application;
 use App\Http\Controllers\ProfileController;
@@ -12,9 +13,9 @@ use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\TableController;
 use App\Http\Controllers\AdminCategoryController;
 use App\Http\Controllers\User\UserMenuController;
-use App\Http\Controllers\User\UserTableController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\User\UserOrderController;
+use App\Http\Controllers\User\UserTableController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ReservationController;
 
@@ -93,11 +94,10 @@ Route::get('/reservation', [HomeController::class, 'index'])->name('reservation'
     Route::post('/orders/store', [UserOrderController::class, 'store'])->name('orders.store');
 
     Route::get('/tables', [UserTableController::class, 'index'])->name('tables.index');
-    Route::post('/tables/reserve', [UserTableController::class, 'reserve'])->name('tables.reserve');
+    Route::post('/tables', [UserTableController::class, 'store'])->name('tables.store');
+    Route::get('/api/tables', [UserTableController::class, 'availableTables']);
 
-
-
-Route::middleware('auth')->group(function () {
+    Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

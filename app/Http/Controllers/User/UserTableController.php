@@ -40,4 +40,12 @@ class UserTableController extends Controller
 
         return redirect()->route('tables.index')->with('success', 'Table reserved successfully!');
     }
+
+    public function availableTables(Request $request)
+    {
+        $tables = Table::where('status', 'available')->get();
+
+        // If using Inertia, return a JSON response instead of a full Inertia page
+        return response()->json($tables);
+    }
 }
