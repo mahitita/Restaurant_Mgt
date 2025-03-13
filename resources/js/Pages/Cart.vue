@@ -88,28 +88,30 @@
       <!-- Payment Modal -->
       <div v-if="showPaymentModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
         <div class="bg-white p-6 rounded-lg shadow-lg w-96">
-          <h3 class="text-xl font-bold mb-4">Complete Payment</h3>
 
-          <!-- Payment Type -->
-          <label class="block font-semibold mb-2">Payment Type:</label>
-          <select v-model="payment.paymentType" class="border p-2 rounded w-full mb-4">
-            <option value="card">Card</option>
-            <option value="bank_transfer">Bank Transfer</option>
-          </select>
-
-          <!-- Account Number -->
-          <label class="block font-semibold mb-2">Account Number:</label>
-          <input type="text" v-model="payment.accountNumber" class="border p-2 rounded w-full mb-4" placeholder="1234567890" />
-
-          <button @click="processPayment" class="bg-blue-500 text-white px-4 py-2 rounded w-full">
-            Pay ${{ totalPrice }}
-          </button>
-
-          <button @click="showPaymentModal = false" class="text-red-500 mt-4 block w-full text-center">
-            Cancel
-          </button>
-        </div>
-      </div>
+    <div class="modal-content">
+      <h2>Payment</h2>
+      <p>Total: ${{ totalPrice }}</p>
+      <select v-model="payment.paymentType" class="border p-2 rounded w-full mb-4">
+        <option value="card">Card</option>
+        <option value="bank_transfer">Bank Transfer</option>
+        <option value="cash">Cash</option>
+      </select>
+      <input
+        v-if="payment.paymentType !== 'cash'"
+        v-model="payment.accountNumber"
+        placeholder="Account Number"
+        class="border p-2 rounded w-full mb-4"
+      />
+      <button @click="processPayment" class="bg-blue-500 text-white px-4 py-2 rounded">
+        Pay ${{ totalPrice }}
+      </button>
+      <button @click="showPaymentModal = false" class="bg-gray-500 text-white px-4 py-2 rounded ml-2">
+        Cancel
+      </button>
+    </div>
+    </div>
+  </div>
     </UserLayout>
   </template>
 
@@ -170,36 +172,28 @@ export default {
       }
       showPaymentModal.value = true;
     };
-    const processPayment = () => {
-  if (!payment.value.accountNumber) {
+    const paymentType = ref({ paymentType: 'card', accountNumber: '' });
+
+const processPayment = () => {
+  if (paymentType.value.paymentType !== 'cash' && !payment.value.accountNumber) {
     alert("Please enter your account number.");
     return;
   }
 
-  console.log("Sending POST to:", route("orders.store"));
-  Inertia.post(
-    route("orders.store"),
-    {
-      cart: cartStore.cartItems,
-      order_type: orderType.value,
-      table_id: selectedTable.value,
-      pickup_time: pickupTime.value,
-      delivery_address: deliveryAddress.value,
-      payment: payment.value,
+  Inertia.post(route("orders.store"), {
+    cart: cartStore.cartItems,
+    order_type: orderType.value,
+    table_id: selectedTable.value,
+    pickup_time: pickupTime.value,
+    delivery_address: deliveryAddress.value,
+    payment: payment.value,
+  }, {
+    onSuccess: () => {
+      cartStore.clearCart();
+      showPaymentModal.value = false;
     },
-    {
-      onSuccess: () => {
-        console.log("Payment successful, redirecting...");
-        cartStore.clearCart();
-        showPaymentModal.value = false;
-      },
-      onError: (errors) => {
-        console.log("Errors:", errors);
-        alert("Payment failed. Please try again.");
-      },
-      onFinish: () => console.log("Request finished"),
-    }
-  );
+    onError: (errors) => alert("Payment failed: " + JSON.stringify(errors)),
+  });
 };
 
     return {

@@ -16,7 +16,7 @@
           <h4 class="font-semibold mt-4">Items:</h4>
           <ul class="list-disc ml-6">
             <li v-for="item in order.order_items" :key="item.id">
-              {{ item.menu_id }} - Quantity: {{ item.quantity }} - Price: ${{ item.price }}
+              Menu ID {{ item.menu_id }} - Quantity: {{ item.quantity }} - Price: ${{ item.price }}
             </li>
           </ul>
         </div>
@@ -24,8 +24,15 @@
           <h3 class="text-xl font-bold mb-4">Payment Details</h3>
           <p><strong>Method:</strong> {{ payment.payment_method }}</p>
           <p><strong>Amount:</strong> ${{ payment.amount }}</p>
-          <p><strong>Status:</strong> {{ payment.status }}</p>
+          <p><strong>Deposit Paid:</strong> ${{ payment.deposit_amount || 0 }}</p>
+          <p><strong>Deposit Refunded:</strong> {{ payment.deposit_refunded ? 'Yes' : 'No' }}</p>
           <p><strong>Paid At:</strong> {{ payment.paid_at }}</p>
+          <p><strong>Status:</strong> {{ payment.status }}</p>
+        </div>
+        <div v-if="reservation" class="bg-white p-6 rounded-lg shadow-md mt-6">
+          <h3 class="text-xl font-bold mb-4">Reservation Details</h3>
+          <p><strong>Table:</strong> {{ reservation.table_id }}</p>
+          <p><strong>Time:</strong> {{ reservation.reservation_time }}</p>
         </div>
         <button
           @click="$inertia.get(route('orders.index'))"
@@ -38,13 +45,14 @@
   </template>
 
   <script>
-  import UserLayout from "../Layouts/UserLayout.vue";
+  import UserLayout from '../Layouts/UserLayout.vue';
 
   export default {
     components: { UserLayout },
     props: {
       order: Object,
       payment: Object,
+      reservation: Object,
       success: String,
     },
   };

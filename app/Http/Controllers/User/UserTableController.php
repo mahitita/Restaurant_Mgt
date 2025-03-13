@@ -62,7 +62,7 @@ class UserTableController extends Controller
             ];
             $frontendPaymentType = $request->input('payment.paymentType');
             $backendPaymentMethod = $paymentMethodMap[$frontendPaymentType] ?? 'cash';
-            Log::info("Creating payment with method: {$backendPaymentMethod}");
+
             Payment::create([
                 'reservation_id' => $reservation->id,
                 'payment_method' => $backendPaymentMethod,

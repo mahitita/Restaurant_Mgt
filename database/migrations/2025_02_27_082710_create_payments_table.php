@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('payment_method', 50);
             $table->decimal('amount', 10, 2);
             $table->decimal('deposit_amount', 10, 2)->nullable();
-    $table->boolean('deposit_refunded')->default(false);
+            $table->boolean('deposit_refunded')->default(false);
             $table->timestamp('paid_at')->nullable(); // Already nullable, good for pre-payments
             $table->enum('status', ['pending', 'paid', 'failed'])->default('pending');
             $table->timestamps();
