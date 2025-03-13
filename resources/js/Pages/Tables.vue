@@ -1,67 +1,62 @@
 <template>
     <div class="container mx-auto px-4 py-8">
-      <h1 class="text-2xl font-bold mb-4">Select Your Table</h1>
+      <h1 class="text-2xl font-bold mb-4">Reserve a Table</h1>
 
-      <!-- Debugging: Show tables count -->
-      <p class="mb-4 text-gray-600">Total Tables: {{ tables.length }}</p>
+      <div class="mb-6">
+        <label for="reservationTime" class="block font-semibold mb-2">Select Date and Time:</label>
+        <input
+          type="datetime-local"
+          v-model="reservationTime"
+          @change="fetchAvailableTables"
+          class="border p-2 rounded w-full"
+          :min="minDateTime"
+        />
+      </div>
 
       <svg viewBox="0 0 1000 600" class="w-full h-auto border rounded-lg shadow-lg">
         <g v-for="table in tables" :key="table.id" @click="selectTable(table)" style="cursor: pointer">
-          <!-- Rectangle Tables -->
-          <template v-if="table.type === 'rectangle'">
-            <rect
-              :x="table.x_coordinate"
-              :y="table.y_coordinate"
-              :width="table.width"
-              :height="table.height"
-              :fill="selectedTable === table.id ? 'green' : table.status === 'available' ? '#90EE90' : '#D3D3D3'"
-              stroke="black"
-              rx="10"
-              ry="10"
-            />
-          </template>
-
-          <!-- Round Tables -->
-          <template v-else-if="table.type === 'round'">
-            <circle
-              :cx="table.x_coordinate"
-              :cy="table.y_coordinate"
-              :r="table.width / 2"
-              :fill="selectedTable === table.id ? 'green' : table.status === 'available' ? '#90EE90' : '#D3D3D3'"
-              stroke="black"
-            />
-          </template>
-
-          <!-- Oval Tables -->
-          <template v-else-if="table.type === 'oval'">
-            <ellipse
-              :cx="table.x_coordinate + table.width / 2"
-              :cy="table.y_coordinate + table.height / 2"
-              :rx="table.width / 2"
-              :ry="table.height / 2"
-              :fill="selectedTable === table.id ? 'green' : table.status === 'available' ? '#90EE90' : '#D3D3D3'"
-              stroke="black"
-            />
-          </template>
-
-          <!-- Square Tables -->
-          <template v-else-if="table.type === 'square'">
-            <rect
-              :x="table.x_coordinate"
-              :y="table.y_coordinate"
-              :width="table.width"
-              :height="table.width"
-              :fill="selectedTable === table.id ? 'green' : table.status === 'available' ? '#90EE90' : '#D3D3D3'"
-              stroke="black"
-              rx="10"
-              ry="10"
-            />
-          </template>
-
-          <!-- Table Number -->
+          <rect
+            v-if="table.type === 'rectangle'"
+            :x="table.x_coordinate"
+            :y="table.y_coordinate"
+            :width="table.width"
+            :height="table.height"
+            :fill="getTableFill(table)"
+            stroke="black"
+            rx="10"
+            ry="10"
+          />
+          <circle
+            v-else-if="table.type === 'round'"
+            :cx="table.x_coordinate"
+            :cy="table.y_coordinate"
+            :r="table.width / 2"
+            :fill="getTableFill(table)"
+            stroke="black"
+          />
+          <ellipse
+            v-else-if="table.type === 'oval'"
+            :cx="table.x_coordinate + table.width / 2"
+            :cy="table.y_coordinate + table.height / 2"
+            :rx="table.width / 2"
+            :ry="table.height / 2"
+            :fill="getTableFill(table)"
+            stroke="black"
+          />
+          <rect
+            v-else-if="table.type === 'square'"
+            :x="table.x_coordinate"
+            :y="table.y_coordinate"
+            :width="table.width"
+            :height="table.width"
+            :fill="getTableFill(table)"
+            stroke="black"
+            rx="10"
+            ry="10"
+          />
           <text
-            :x="table.x_coordinate + (table.type === 'rectangle' ? table.width / 2 : 0)"
-            :y="table.y_coordinate + (table.type === 'rectangle' ? table.height / 2 : 0)"
+            :x="table.x_coordinate + (table.type === 'rectangle' || table.type === 'square' ? table.width / 2 : 0)"
+            :y="table.y_coordinate + (table.type === 'rectangle' || table.type === 'square' ? table.height / 2 : 0)"
             text-anchor="middle"
             alignment-baseline="middle"
             fill="black"
@@ -70,8 +65,6 @@
           >
             {{ table.table_number }}
           </text>
-
-          <!-- Chairs -->
           <circle
             v-for="chair in getChairs(table)"
             :key="chair.id"
@@ -83,10 +76,17 @@
         </g>
       </svg>
 
-      <!-- Selected Table Info -->
       <div v-if="selectedTable" class="mt-4 p-4 bg-green-100 border border-green-400 rounded-lg">
-        <p class="text-lg">You have selected Table {{ selectedTable }}</p>
-        <button @click="reserveTable" class="bg-blue-500 text-white px-4 py-2 rounded">Reserve Table</button>
+        <p>Selected Table: {{ tables.find(t => t.id === selectedTable).table_number }}</p>
+        <p>Deposit: $10 (refunded if you pay cash on-site)</p>
+        <select v-model="paymentType" class="border p-2 rounded w-full mb-4">
+          <option value="card">Card</option>
+          <option value="bank_transfer">Bank Transfer</option>
+        </select>
+        <input v-model="accountNumber" placeholder="Account Number" class="border p-2 rounded w-full mb-4" />
+        <button @click="reserveTable" class="bg-blue-500 text-white px-4 py-2 rounded" :disabled="isReserving">
+          {{ isReserving ? 'Reserving...' : 'Reserve with Deposit' }}
+        </button>
       </div>
     </div>
   </template>
@@ -95,28 +95,57 @@
   import { ref, onMounted } from 'vue';
   import { Inertia } from '@inertiajs/inertia';
   import { usePage } from '@inertiajs/vue3';
-
-  const tables = ref([]);
-  const selectedTable = ref(null);
+  import axios from 'axios';
 
   const { props } = usePage();
-  tables.value = props.tables;
+  const tables = ref(props.tables || []);
+  const selectedTable = ref(null);
+  const reservationTime = ref(props.selectedDateTime || new Date(Date.now() + 3600000).toISOString().slice(0, 16));
+  const paymentType = ref('card');
+  const accountNumber = ref('');
+  const isReserving = ref(false);
+  const minDateTime = new Date().toISOString().slice(0, 16);
 
-  // Debugging: Check if tables are loading
   onMounted(() => {
-    console.log("Tables Loaded:", tables.value);
+    console.log("Initial Tables:", tables.value);
+    fetchAvailableTables();
   });
 
+  const fetchAvailableTables = async () => {
+    const response = await axios.get(route('tables.available'), {
+      params: { date_time: reservationTime.value },
+    });
+    tables.value = response.data;
+    console.log("Updated Tables:", tables.value);
+  };
+
   const selectTable = (table) => {
-    if (table.status !== 'available') {
-      alert('This table is not available!');
+    if (!table.available) {
+      alert('This table is not available on the selected date!');
       return;
     }
     selectedTable.value = table.id;
   };
 
   const reserveTable = () => {
-    Inertia.post('/tables', { table_id: selectedTable.value });
+    isReserving.value = true;
+    Inertia.post(route('tables.store'), {
+      table_id: selectedTable.value,
+      reservation_time: reservationTime.value,
+      payment: { paymentType: paymentType.value, accountNumber: accountNumber.value },
+    }, {
+      onSuccess: () => {
+        selectedTable.value = null;
+        fetchAvailableTables();
+      },
+      onError: (errors) => alert("Reservation failed: " + JSON.stringify(errors)),
+      onFinish: () => isReserving.value = false,
+    });
+  };
+
+  const getTableFill = (table) => {
+    if (selectedTable.value === table.id) return 'green';
+    return table.available ? '#90EE90' : '#D3D3D3';
   };
 
   const getChairs = (table) => {
@@ -124,17 +153,16 @@
     const chairSpacing = 30;
 
     if (table.type === 'rectangle' || table.type === 'square') {
-      // Chairs on left and right
       for (let i = 0; i < table.seats / 2; i++) {
         chairs.push({
           id: `chair-${table.id}-left-${i}`,
           x: table.x_coordinate - chairSpacing,
-          y: table.y_coordinate + (i + 1) * (table.height / (table.seats / 2))
+          y: table.y_coordinate + (i + 1) * (table.height / (table.seats / 2)),
         });
         chairs.push({
           id: `chair-${table.id}-right-${i}`,
           x: table.x_coordinate + table.width + chairSpacing,
-          y: table.y_coordinate + (i + 1) * (table.height / (table.seats / 2))
+          y: table.y_coordinate + (i + 1) * (table.height / (table.seats / 2)),
         });
       }
     } else if (table.type === 'round' || table.type === 'oval') {
@@ -144,30 +172,16 @@
         chairs.push({
           id: `chair-${table.id}-${i}`,
           x: table.x_coordinate + radius * Math.cos(angle),
-          y: table.y_coordinate + radius * Math.sin(angle)
+          y: table.y_coordinate + radius * Math.sin(angle),
         });
       }
     }
-
     return chairs;
   };
   </script>
 
   <style scoped>
-  /* SVG Container */
-  svg {
-    max-width: 1000px;
-    max-height: 600px;
-  }
-
-  /* Table Hover Effect */
-  rect, circle, ellipse {
-    transition: fill 0.3s ease;
-  }
-
-  rect:hover,
-  circle:hover,
-  ellipse:hover {
-    fill: #87CEFA; /* Light sky blue */
-  }
+  svg { max-width: 1000px; max-height: 600px; }
+  rect, circle, ellipse { transition: fill 0.3s ease; }
+  rect:hover, circle:hover, ellipse:hover { fill: #87CEFA; }
   </style>

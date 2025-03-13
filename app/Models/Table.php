@@ -2,8 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Table extends Model
 {
@@ -42,6 +43,19 @@ class Table extends Model
         return $this->hasMany(Reservation::class);
     }
 
+
+    public function isAvailable($dateTime)
+    {
+        $reservationDate = $dateTime->toDateString();
+        $hasReservation = $this->reservations()
+            ->where('status', 'confirmed')
+            ->whereDate('reservation_time', $reservationDate)
+            ->exists();
+
+        Log::info("Checking availability for Table {$this->id} on {$reservationDate}: Status = {$this->status}, Has Reservation = " . ($hasReservation ? 'Yes' : 'No'));
+
+        return !$hasReservation; // Only block if there's a confirmed reservation for this date
+    }
     /**
      * Get the orders for the table.
      */

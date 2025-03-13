@@ -11,7 +11,7 @@ class TableController extends Controller
     // Show all tables
     public function index()
     {
-        $tables = Table::all();
+        $tables = Table::with('reservations')->get();
         return inertia('Admin/Tables/Index', ['tables' => $tables]);
     }
 
@@ -80,5 +80,28 @@ class TableController extends Controller
     {
         $table->delete();
         return redirect()->route('admin.tables.index')->with('success', 'Table deleted successfully.');
+    }
+
+    public function updateStatus(Request $request, Table $table)
+    {
+        $request->validate([
+            'status' => 'required|in:available,occupied,reserved',
+        ]);
+
+        $table->status = $request->status;
+        $table->save();
+
+        if ($request->status === 'available') {
+            $reservation = $table->reservations()
+                ->where('status', 'confirmed')
+                ->whereDate('reservation_time', now()->toDateString())
+                ->first();
+            if ($reservation) {
+                $reservation->status = 'cancelled'; // Or 'completed' if you add it
+                $reservation->save();
+            }
+        }
+
+        return redirect()->route('admin.tables.index')->with('success', 'Table status updated.');
     }
 }

@@ -75,7 +75,7 @@ Route::prefix('admin')->group(function () {
     Route::get('/tables/{table}/edit', [TableController::class, 'edit'])->name('admin.tables.edit');
     Route::put('/tables/{table}', [TableController::class, 'update'])->name('admin.tables.update');
     Route::delete('/tables/{table}', [TableController::class, 'destroy'])->name('admin.tables.destroy');
-
+    Route::put('/tables/{table}/status', [TableController::class, 'updateStatus'])->name('admin.tables.status');
 });
 
 
@@ -89,9 +89,11 @@ Route::get('/reservation', [HomeController::class, 'index'])->name('reservation'
         Route::get('/orders', [UserOrderController::class, 'index'])->name('orders.index');
         Route::post('/orders', [UserOrderController::class, 'store'])->name('orders.store');
         Route::get('/orders/confirmation/{order}', [UserOrderController::class, 'confirmation'])->name('orders.confirmation');
-    Route::get('/tables', [UserTableController::class, 'index'])->name('tables.index');
-    Route::post('/tables', [UserTableController::class, 'store'])->name('tables.store');
-    Route::get('/api/tables', [UserTableController::class, 'availableTables']);
+
+        Route::get('/tables', [UserTableController::class, 'index'])->name('tables.index');
+        Route::post('/tables', [UserTableController::class, 'store'])->name('tables.store');
+        Route::get('/tables/available', [UserTableController::class, 'availableTables'])->name('tables.available');
+
 
     Route::get('/orders', [OrderController::class, 'index'])->name('admin.orders.index');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('admin.orders.show');

@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers\User;
 
-use App\Http\Controllers\Controller;
 use App\Models\Order;
-use App\Models\OrderItem;
 use App\Models\Payment;
+use App\Models\OrderItem;
+use App\Models\Reservation;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 
 class UserOrderController extends Controller
 {
@@ -54,7 +55,27 @@ class UserOrderController extends Controller
                     'price' => $item['price'],
                 ]);
             }
+            $totalPrice = $order->total_price;
+            $reservation = Reservation::where('user_id', Auth::id())
+                ->where('status', 'confirmed')
+                ->whereDate('reservation_time', now()->toDateString())
+                ->first();
 
+            if ($reservation) {
+                $payment = $reservation->payment;
+                if ($request->input('payment.paymentType') === 'cash') {
+                    $payment->update([
+                        'amount' => $totalPrice,
+                        'deposit_refunded' => true,
+                    ]);
+                    $reservation->table->status = 'occupied'; // Admin will set to available later
+                    $reservation->table->save();
+                } else {
+                    $remaining = max(0, $totalPrice - $payment->deposit_amount);
+                    $payment->update([
+                        'amount' => $totalPrice,
+                        'deposit_amount' => min($totalPrice, $payment->deposit_amount),
+                    ]);
             $paymentMethodMap = [
                 'card' => 'cbe_birr',
                 'bank_transfer' => 'amole',
@@ -69,7 +90,7 @@ class UserOrderController extends Controller
                 'paid_at' => now(),
                 'status' => 'paid',
             ]);
-
+        }}
             // Redirect to confirmation route with order ID
             return redirect()->route('orders.confirmation', ['order' => $order->id]);
         });

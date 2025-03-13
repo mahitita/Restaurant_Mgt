@@ -17,8 +17,10 @@ return new class extends Migration
             $table->foreignId('order_id')->nullable()->constrained('orders')->onDelete('set null');
             // Add reservation_id as an optional link if payment is tied to a reservation
             $table->foreignId('reservation_id')->nullable()->constrained('reservations')->onDelete('set null');
-            $table->enum('payment_method', ['cash', 'cbe_birr', 'telebirr', 'amole']);
+            $table->string('payment_method', 50);
             $table->decimal('amount', 10, 2);
+            $table->decimal('deposit_amount', 10, 2)->nullable();
+    $table->boolean('deposit_refunded')->default(false);
             $table->timestamp('paid_at')->nullable(); // Already nullable, good for pre-payments
             $table->enum('status', ['pending', 'paid', 'failed'])->default('pending');
             $table->timestamps();
