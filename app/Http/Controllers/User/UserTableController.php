@@ -2,16 +2,15 @@
 
 namespace App\Http\Controllers\User;
 
+use App\Http\Controllers\Controller;
+use App\Models\Table;
+use App\Models\Reservation;
+use App\Models\Payment;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Inertia\Inertia;
-use App\Models\Table;
-use App\Models\Payment;
-use App\Models\Reservation;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
 
 class UserTableController extends Controller
 {
@@ -23,8 +22,6 @@ class UserTableController extends Controller
             return $table;
         });
 
-        Log::info("Tables for {$dateTime->toDateTimeString()}: " . $tables->toJson());
-
         return Inertia::render('Tables', [
             'tables' => $tables,
             'selectedDateTime' => $dateTime->toDateTimeString(),
@@ -34,28 +31,35 @@ class UserTableController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'table_id' => 'required|exists:tables,id',
+            'table_ids' => 'required|array|min:1',
+            'table_ids.*' => 'required|exists:tables,id',
             'reservation_time' => 'required|date|after:now',
             'payment.paymentType' => 'required|in:card,bank_transfer',
             'payment.accountNumber' => 'required|string|max:255',
         ]);
 
-        $table = Table::findOrFail($request->table_id);
+        $tables = Table::findMany($request->table_ids);
         $reservationTime = Carbon::parse($request->reservation_time);
 
-        if (!$table->isAvailable($reservationTime)) {
-            return redirect()->back()->with('error', 'Table is already reserved for this date.');
+        foreach ($tables as $table) {
+            if (!$table->isAvailable($reservationTime)) {
+                return redirect()->back()->with('error', "Table {$table->table_number} is already reserved for this date.");
+            }
         }
 
-        return DB::transaction(function () use ($request, $table, $reservationTime) {
-            $reservation = Reservation::create([
-                'user_id' => Auth::id(),
-                'table_id' => $table->id,
-                'reservation_time' => $reservationTime,
-                'status' => 'pending',
-            ]);
+        return DB::transaction(function () use ($request, $tables, $reservationTime) {
+            $reservations = [];
+            foreach ($tables as $table) {
+                $reservations[] = Reservation::create([
+                    'user_id' => Auth::id(),
+                    'table_id' => $table->id,
+                    'reservation_time' => $reservationTime,
+                    'status' => 'pending',
+                ]);
+            }
 
-            $deposit = 100.00;
+            $depositPerTable = 10.00;
+            $totalDeposit = $depositPerTable * $tables->count();
             $paymentMethodMap = [
                 'card' => 'cbe_birr',
                 'bank_transfer' => 'amole',
@@ -63,19 +67,21 @@ class UserTableController extends Controller
             $frontendPaymentType = $request->input('payment.paymentType');
             $backendPaymentMethod = $paymentMethodMap[$frontendPaymentType] ?? 'cash';
 
-            Payment::create([
-                'reservation_id' => $reservation->id,
+            $payment = Payment::create([
+                'reservation_id' => $reservations[0]->id, // Link to first reservation
                 'payment_method' => $backendPaymentMethod,
                 'amount' => 0,
-                'deposit_amount' => $deposit,
+                'deposit_amount' => $totalDeposit,
                 'paid_at' => now(),
                 'status' => 'paid',
             ]);
 
-            $reservation->status = 'confirmed';
-            $reservation->save();
+            foreach ($reservations as $reservation) {
+                $reservation->status = 'confirmed';
+                $reservation->save();
+            }
 
-            return redirect()->route('tables.index')->with('success', 'Table reserved with deposit!');
+            return redirect()->route('tables.index')->with('success', 'Tables reserved with deposit!');
         });
     }
 

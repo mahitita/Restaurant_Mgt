@@ -18,6 +18,7 @@ use App\Http\Controllers\User\UserOrderController;
 use App\Http\Controllers\User\UserTableController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ReservationController;
+use App\Http\Controllers\User\UserReservationsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -61,6 +62,7 @@ Route::prefix('admin')->group(function () {
                 Route::get('/reservations/{reservation}', [ReservationController::class, 'show'])->name('admin.reservations.show');
                 Route::put('/reservations/{reservation}', [ReservationController::class, 'update'])->name('admin.reservations.update');
                 Route::delete('/reservations/{reservation}', [ReservationController::class, 'destroy'])->name('admin.reservations.destroy');
+                Route::put('/reservations/{reservation}/status', [ReservationController::class, 'updateStatus'])->name('admin.reservations.status');
 
                     Route::get('/users', [UserController::class, 'index'])->name('admin.users.index');
                     Route::get('/users/create', [UserController::class, 'create'])->name('admin.users.create');
@@ -93,6 +95,7 @@ Route::get('/reservation', [HomeController::class, 'index'])->name('reservation'
         Route::get('/tables', [UserTableController::class, 'index'])->name('tables.index');
         Route::post('/tables', [UserTableController::class, 'store'])->name('tables.store');
         Route::get('/tables/available', [UserTableController::class, 'availableTables'])->name('tables.available');
+        Route::get('/reservations', [UserReservationsController::class, 'index'])->name('reservations.index');
 
 
     Route::get('/orders', [OrderController::class, 'index'])->name('admin.orders.index');

@@ -1,6 +1,6 @@
 <template>
     <div class="container mx-auto px-4 py-8">
-      <h1 class="text-2xl font-bold mb-4">Reserve a Table</h1>
+      <h1 class="text-2xl font-bold mb-4">Reserve Tables</h1>
 
       <div class="mb-6">
         <label for="reservationTime" class="block font-semibold mb-2">Select Date and Time:</label>
@@ -14,7 +14,7 @@
       </div>
 
       <svg viewBox="0 0 1000 600" class="w-full h-auto border rounded-lg shadow-lg">
-        <g v-for="table in tables" :key="table.id" @click="selectTable(table)" style="cursor: pointer">
+        <g v-for="table in tables" :key="table.id" @click="toggleTable(table)" style="cursor: pointer">
           <rect
             v-if="table.type === 'rectangle'"
             :x="table.x_coordinate"
@@ -76,15 +76,16 @@
         </g>
       </svg>
 
-      <div v-if="selectedTable" class="mt-4 p-4 bg-green-100 border border-green-400 rounded-lg">
-        <p>Selected Table: {{ tables.find(t => t.id === selectedTable).table_number }}</p>
-        <p>Deposit: $10 (refunded if you pay cash on-site)</p>
+      <div v-if="selectedTables.length" class="mt-4 p-4 bg-green-100 border border-green-400 rounded-lg">
+        <p class="text-lg">Selected Tables: {{ selectedTables.map(id => tables.find(t => t.id === id).table_number).join(', ') }}</p>
+        <p>Total Seats: {{ totalSeats }}</p>
+        <p>Deposit: ${{ selectedTables.length * 10 }} (refunded if you pay cash on-site)</p>
         <select v-model="paymentType" class="border p-2 rounded w-full mb-4">
           <option value="card">Card</option>
           <option value="bank_transfer">Bank Transfer</option>
         </select>
         <input v-model="accountNumber" placeholder="Account Number" class="border p-2 rounded w-full mb-4" />
-        <button @click="reserveTable" class="bg-blue-500 text-white px-4 py-2 rounded" :disabled="isReserving">
+        <button @click="reserveTables" class="bg-blue-500 text-white px-4 py-2 rounded" :disabled="isReserving">
           {{ isReserving ? 'Reserving...' : 'Reserve with Deposit' }}
         </button>
       </div>
@@ -92,19 +93,23 @@
   </template>
 
   <script setup>
-  import { ref, onMounted } from 'vue';
+  import { ref, onMounted, computed } from 'vue';
   import { Inertia } from '@inertiajs/inertia';
   import { usePage } from '@inertiajs/vue3';
   import axios from 'axios';
 
   const { props } = usePage();
   const tables = ref(props.tables || []);
-  const selectedTable = ref(null);
+  const selectedTables = ref([]);
   const reservationTime = ref(props.selectedDateTime || new Date(Date.now() + 3600000).toISOString().slice(0, 16));
   const paymentType = ref('card');
   const accountNumber = ref('');
   const isReserving = ref(false);
   const minDateTime = new Date().toISOString().slice(0, 16);
+
+  const totalSeats = computed(() =>
+    selectedTables.value.reduce((sum, id) => sum + tables.value.find(t => t.id === id).seats, 0)
+  );
 
   onMounted(() => {
     console.log("Initial Tables:", tables.value);
@@ -116,26 +121,37 @@
       params: { date_time: reservationTime.value },
     });
     tables.value = response.data;
-    console.log("Updated Tables:", tables.value);
+    selectedTables.value = selectedTables.value.filter(id =>
+      tables.value.find(t => t.id === id)?.available
+    );
   };
 
-  const selectTable = (table) => {
+  const toggleTable = (table) => {
     if (!table.available) {
       alert('This table is not available on the selected date!');
       return;
     }
-    selectedTable.value = table.id;
+    const index = selectedTables.value.indexOf(table.id);
+    if (index === -1) {
+      selectedTables.value.push(table.id);
+    } else {
+      selectedTables.value.splice(index, 1);
+    }
   };
 
-  const reserveTable = () => {
+  const reserveTables = () => {
+    if (!accountNumber.value) {
+      alert("Please enter your account number.");
+      return;
+    }
     isReserving.value = true;
     Inertia.post(route('tables.store'), {
-      table_id: selectedTable.value,
+      table_ids: selectedTables.value,
       reservation_time: reservationTime.value,
       payment: { paymentType: paymentType.value, accountNumber: accountNumber.value },
     }, {
       onSuccess: () => {
-        selectedTable.value = null;
+        selectedTables.value = [];
         fetchAvailableTables();
       },
       onError: (errors) => alert("Reservation failed: " + JSON.stringify(errors)),
@@ -144,7 +160,7 @@
   };
 
   const getTableFill = (table) => {
-    if (selectedTable.value === table.id) return 'green';
+    if (selectedTables.value.includes(table.id)) return 'green';
     return table.available ? '#90EE90' : '#D3D3D3';
   };
 

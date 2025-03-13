@@ -4,36 +4,43 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Reservation;
-use App\Models\User;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class ReservationController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $reservations = Reservation::with('user')->latest()->get();
-        return inertia('Admin/Reservation/Index', ['reservations' => $reservations]);
+        $date = $request->input('date', now()->toDateString());
+        $reservations = Reservation::with(['table', 'user', 'payment'])
+            ->orderBy('reservation_time', 'asc')
+            ->get()
+            ->map(function ($reservation) {
+                return [
+                    'id' => $reservation->id,
+                    'table_number' => $reservation->table->table_number,
+                    'user_name' => $reservation->user->name ?? 'Unknown',
+                    'reservation_time' => $reservation->reservation_time->toDateTimeString(),
+                    'status' => $reservation->status,
+                    'deposit_amount' => $reservation->payment ? $reservation->payment->deposit_amount : 0,
+                ];
+            });
+
+        return Inertia::render('Admin/Reservations/Index', [
+            'reservations' => $reservations,
+            'selectedDate' => $date,
+        ]);
     }
 
-    public function show(Reservation $reservation)
-    {
-        return inertia('Admin/Reservation/Show', ['reservation' => $reservation->load('user')]);
-    }
-
-    public function update(Request $request, Reservation $reservation)
+    public function updateStatus(Request $request, Reservation $reservation)
     {
         $request->validate([
-            'status' => 'required|in:pending,confirmed,cancelled,completed',
+            'status' => 'required|in:pending,confirmed,cancelled',
         ]);
 
-        $reservation->update(['status' => $request->status]);
+        $reservation->status = $request->status;
+        $reservation->save();
 
-        return redirect()->route('admin.reservations.index')->with('success', 'Reservation updated successfully.');
-    }
-
-    public function destroy(Reservation $reservation)
-    {
-        $reservation->delete();
-        return redirect()->route('admin.reservations.index')->with('success', 'Reservation deleted successfully.');
+        return redirect()->route('admin.reservations.index')->with('success', 'Reservation status updated.');
     }
 }

@@ -120,9 +120,8 @@ class UserOrderController extends Controller
             ->firstOrFail();
 
         $reservation = Reservation::where('user_id', Auth::id())
-            ->where('table_id', $order->table_id)
             ->whereDate('reservation_time', now()->toDateString())
-            ->first();
+            ->get();
 
         return inertia('OrderConfirmation', [
             'order' => $order,

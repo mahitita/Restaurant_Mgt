@@ -29,10 +29,10 @@
           <p><strong>Paid At:</strong> {{ payment.paid_at }}</p>
           <p><strong>Status:</strong> {{ payment.status }}</p>
         </div>
-        <div v-if="reservation" class="bg-white p-6 rounded-lg shadow-md mt-6">
+        <div v-if="reservations.length" class="bg-white p-6 rounded-lg shadow-md mt-6">
           <h3 class="text-xl font-bold mb-4">Reservation Details</h3>
-          <p><strong>Table:</strong> {{ reservation.table_id }}</p>
-          <p><strong>Time:</strong> {{ reservation.reservation_time }}</p>
+          <p><strong>Tables:</strong> {{ reservations.map(r => r.table_id).join(', ') }}</p>
+          <p><strong>Time:</strong> {{ reservations[0].reservation_time }}</p>
         </div>
         <button
           @click="$inertia.get(route('orders.index'))"
@@ -52,7 +52,7 @@
     props: {
       order: Object,
       payment: Object,
-      reservation: Object,
+      reservations: Array,
       success: String,
     },
   };
