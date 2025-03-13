@@ -113,101 +113,111 @@
     </UserLayout>
   </template>
 
-  <script>
-  import UserLayout from "../Layouts/UserLayout.vue";
-  import { useCartStore } from "../Stores/CartStore";
-  import { storeToRefs } from "pinia";
-  import { ref, onMounted } from "vue";
-  import { Inertia } from "@inertiajs/inertia";
-  import axios from "axios";
 
-  export default {
-    components: { UserLayout },
-    setup() {
-      const cartStore = useCartStore();
-      const { cartItems, totalPrice } = storeToRefs(cartStore);
 
-      const orderType = ref("takeout");
-      const selectedTable = ref(null);
-      const pickupTime = ref("");
-      const deliveryAddress = ref("");
-      const availableTables = ref([]);
-      const showPaymentModal = ref(false);
-      const payment = ref({
-        paymentType: "card",
-        accountNumber: "",
-      });
+<script>
+import UserLayout from "../Layouts/UserLayout.vue";
+import { useCartStore } from "../Stores/CartStore";
+import { storeToRefs } from "pinia";
+import { ref, onMounted } from "vue";
+import { Inertia } from "@inertiajs/inertia";
+import axios from "axios";
 
-      const fetchTables = async () => {
-        try {
-          const response = await axios.get("/api/tables");
-          availableTables.value = response.data;
-        } catch (error) {
-          console.error("Error fetching tables:", error);
-        }
-      };
+export default {
+  components: { UserLayout },
+  setup() {
+    const cartStore = useCartStore();
+    const { cartItems, totalPrice } = storeToRefs(cartStore);
 
-      onMounted(fetchTables);
+    const orderType = ref("takeout");
+    const selectedTable = ref(null);
+    const pickupTime = ref("");
+    const deliveryAddress = ref("");
+    const availableTables = ref([]);
+    const showPaymentModal = ref(false);
+    const payment = ref({
+      paymentType: "card",
+      accountNumber: "",
+    });
 
-      const selectTable = (tableId) => {
-        selectedTable.value = tableId;
-      };
+    const fetchTables = async () => {
+      try {
+        const response = await axios.get("/api/tables");
+        availableTables.value = response.data;
+      } catch (error) {
+        console.error("Error fetching tables:", error);
+      }
+    };
 
-      const updateItemQuantity = (menuId, quantity) => {
-        cartStore.updateQuantity(menuId, quantity);
-      };
+    onMounted(fetchTables);
 
-      const removeFromCart = (menuId) => {
-        cartStore.removeFromCart(menuId);
-      };
+    const selectTable = (tableId) => {
+      selectedTable.value = tableId;
+    };
 
-      const openPaymentModal = () => {
-        if (orderType.value === "dine-in" && !selectedTable.value) {
-          alert("Please select a table.");
-          return;
-        }
-        showPaymentModal.value = true;
-      };
+    const updateItemQuantity = (menuId, quantity) => {
+      cartStore.updateQuantity(menuId, quantity);
+    };
 
-      const processPayment = () => {
-        if (!payment.value.accountNumber) {
-          alert("Please enter your account number.");
-          return;
-        }
+    const removeFromCart = (menuId) => {
+      cartStore.removeFromCart(menuId);
+    };
 
-        Inertia.post(route("orders.store"), {
-          cart: cartStore.cartItems,
-          order_type: orderType.value,
-          table_id: selectedTable.value,
-          pickup_time: pickupTime.value,
-          delivery_address: deliveryAddress.value,
-          payment: payment.value,
-        }, {
-          onSuccess: () => {
-            cartStore.clearCart();
-            showPaymentModal.value = false;
-            alert("Payment Successful!");
-          },
-          onError: (errors) => console.log("Payment Error:", errors),
-        });
-      };
+    const openPaymentModal = () => {
+      if (orderType.value === "dine-in" && !selectedTable.value) {
+        alert("Please select a table.");
+        return;
+      }
+      showPaymentModal.value = true;
+    };
+    const processPayment = () => {
+  if (!payment.value.accountNumber) {
+    alert("Please enter your account number.");
+    return;
+  }
 
-      return {
-        cartItems,
-        totalPrice,
-        orderType,
-        selectedTable,
-        pickupTime,
-        deliveryAddress,
-        availableTables,
-        showPaymentModal,
-        selectTable,
-        updateItemQuantity,
-        removeFromCart,
-        openPaymentModal,
-        processPayment,
-        payment,
-      };
+  console.log("Sending POST to:", route("orders.store"));
+  Inertia.post(
+    route("orders.store"),
+    {
+      cart: cartStore.cartItems,
+      order_type: orderType.value,
+      table_id: selectedTable.value,
+      pickup_time: pickupTime.value,
+      delivery_address: deliveryAddress.value,
+      payment: payment.value,
     },
-  };
-  </script>
+    {
+      onSuccess: () => {
+        console.log("Payment successful, redirecting...");
+        cartStore.clearCart();
+        showPaymentModal.value = false;
+      },
+      onError: (errors) => {
+        console.log("Errors:", errors);
+        alert("Payment failed. Please try again.");
+      },
+      onFinish: () => console.log("Request finished"),
+    }
+  );
+};
+
+    return {
+      cartItems,
+      totalPrice,
+      orderType,
+      selectedTable,
+      pickupTime,
+      deliveryAddress,
+      availableTables,
+      showPaymentModal,
+      selectTable,
+      updateItemQuantity,
+      removeFromCart,
+      openPaymentModal,
+      processPayment,
+      payment,
+    };
+  },
+};
+</script>

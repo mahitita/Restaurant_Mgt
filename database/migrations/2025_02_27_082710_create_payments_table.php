@@ -13,15 +13,17 @@ return new class extends Migration
     {
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('order_id')->constrained('orders')->onDelete('cascade');
+            // Make order_id nullable since payment might happen before an order is finalized
+            $table->foreignId('order_id')->nullable()->constrained('orders')->onDelete('set null');
+            // Add reservation_id as an optional link if payment is tied to a reservation
+            $table->foreignId('reservation_id')->nullable()->constrained('reservations')->onDelete('set null');
             $table->enum('payment_method', ['cash', 'cbe_birr', 'telebirr', 'amole']);
             $table->decimal('amount', 10, 2);
-            $table->timestamp('paid_at')->nullable();
+            $table->timestamp('paid_at')->nullable(); // Already nullable, good for pre-payments
             $table->enum('status', ['pending', 'paid', 'failed'])->default('pending');
             $table->timestamps();
         });
     }
-
 
     /**
      * Reverse the migrations.

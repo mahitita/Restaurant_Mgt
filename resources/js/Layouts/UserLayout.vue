@@ -3,11 +3,11 @@
       <!-- Navbar -->
       <nav class="bg-white shadow-lg p-4">
         <div class="container mx-auto flex justify-between items-center">
-          <router-link :href="route('home')" class="text-2xl font-bold text-red-500">Royal Feast</router-link>
+          <Link :href="route('home')" class="text-2xl font-bold text-red-500">Royal Feast</Link>
           <div>
-            <router-link :href="route('menu')" class="text-gray-700 px-4">Menu</router-link>
-            <router-link :href="route('reservation')" class="text-gray-700 px-4">Reservations</router-link>
-            <router-link :href="route('login')" class="bg-red-500 text-white px-4 py-2 rounded">Login</router-link>
+            <Link :href="route('menu')" class="text-gray-700 px-4">Menu</Link>
+            <Link :href="route('reservation')" class="text-gray-700 px-4">Reservations</Link>
+            <Link :href="route('login')" class="bg-red-500 text-white px-4 py-2 rounded">Login</Link>
           </div>
         </div>
       </nav>
@@ -25,5 +25,6 @@
   </template>
 
   <script>
+    import { Link } from '@inertiajs/vue3';
   export default {};
   </script>

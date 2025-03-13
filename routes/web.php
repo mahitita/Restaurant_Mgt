@@ -56,10 +56,6 @@ Route::prefix('admin')->group(function () {
         Route::put('/menus/{menu}', [MenuController::class, 'update'])->name('admin.menus.update');
         Route::delete('/menus/{menu}', [MenuController::class, 'destroy'])->name('admin.menus.destroy');
 
-            Route::get('/orders', [OrderController::class, 'index'])->name('admin.orders.index');
-            Route::get('/orders/{order}', [OrderController::class, 'show'])->name('admin.orders.show');
-            Route::put('/orders/{order}', [OrderController::class, 'update'])->name('admin.orders.update');
-            Route::delete('/orders/{order}', [OrderController::class, 'destroy'])->name('admin.orders.destroy');
 
                 Route::get('/reservations', [ReservationController::class, 'index'])->name('admin.reservations.index');
                 Route::get('/reservations/{reservation}', [ReservationController::class, 'show'])->name('admin.reservations.show');
@@ -89,13 +85,18 @@ Route::get('/menu', [UserMenuController::class, 'index'])->name('menu');
 Route::get('/reservation', [HomeController::class, 'index'])->name('reservation');
 
     Route::inertia('/cart', 'Cart')->name('cart.index');
-    Route::get('/orders', [UserOrderController::class, 'index'])->name('orders.index');
 
-    Route::post('/orders/store', [UserOrderController::class, 'store'])->name('orders.store');
-
+        Route::get('/orders', [UserOrderController::class, 'index'])->name('orders.index');
+        Route::post('/orders', [UserOrderController::class, 'store'])->name('orders.store');
+        Route::get('/orders/confirmation/{order}', [UserOrderController::class, 'confirmation'])->name('orders.confirmation');
     Route::get('/tables', [UserTableController::class, 'index'])->name('tables.index');
     Route::post('/tables', [UserTableController::class, 'store'])->name('tables.store');
     Route::get('/api/tables', [UserTableController::class, 'availableTables']);
+
+    Route::get('/orders', [OrderController::class, 'index'])->name('admin.orders.index');
+    Route::get('/orders/{order}', [OrderController::class, 'show'])->name('admin.orders.show');
+    Route::put('/orders/{order}', [OrderController::class, 'update'])->name('admin.orders.update');
+    Route::delete('/orders/{order}', [OrderController::class, 'destroy'])->name('admin.orders.destroy');
 
     Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
