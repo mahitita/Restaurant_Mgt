@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\User;
 
 use Carbon\Carbon;
+use App\Models\Menu;
+use Inertia\Inertia;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\OrderItem;
@@ -130,4 +132,74 @@ class UserOrderController extends Controller
             'success' => 'Order and payment processed successfully!',
         ]);
     }
+
+    public function preorder(Request $request)
+{
+    $reservationIds = explode(',', $request->query('reservation_ids'));
+    $reservations = Reservation::whereIn('id', $reservationIds)
+        ->where('user_id', Auth::id())
+        ->with('table')
+        ->get();
+
+    // if ($reservations->isEmpty()) {
+    //     abort(403, 'Invalid or unauthorized reservation.');
+    // }
+
+    return Inertia::render('Orders/Preorder', [
+        'reservations' => $reservations->map(fn($r) => [
+            'id' => $r->id,
+            'table_number' => $r->table->table_number,
+            'reservation_time' => $r->reservation_time->toDateTimeString(),
+        ]),
+        'menuItems' => Menu::all(), // Assume a Menu model exists
+    ]);
+}
+
+public function storePreorder(Request $request)
+{
+    $request->validate([
+        'reservation_ids' => 'required|array|min:1',
+        'reservation_ids.*' => 'exists:reservations,id',
+        'cart' => 'required|array|min:1',
+        'cart.*.id' => 'required|exists:menus,id',
+        'cart.*.quantity' => 'required|integer|min:1',
+        'cart.*.price' => 'required|numeric|min:0',
+    ]);
+
+    $reservations = Reservation::whereIn('id', $request->reservation_ids)
+        ->where('user_id', Auth::id())
+        ->get();
+
+    if ($reservations->isEmpty()) {
+        abort(403, 'Invalid or unauthorized reservation.');
+    }
+
+    return DB::transaction(function () use ($request, $reservations) {
+        $totalPrice = collect($request->cart)->sum(fn($item) => $item['price'] * $item['quantity']);
+        $order = Order::create([
+            'user_id' => Auth::id(),
+            'order_type' => 'dine-in',
+            'status' => 'preordered',
+            'total_price' => $totalPrice,
+            'table_id' => $reservations->first()->table_id, // First table for simplicity
+        ]);
+
+        foreach ($request->cart as $item) {
+            OrderItem::create([
+                'order_id' => $order->id,
+                'menu_id' => $item['id'],
+                'quantity' => $item['quantity'],
+                'price' => $item['price'],
+            ]);
+        }
+
+        foreach ($reservations as $reservation) {
+            $reservation->order_id = $order->id;
+            $reservation->save();
+        }
+
+        return redirect()->route('reservations.index')->with('success', 'Pre-order placed successfully!');
+    });
+}
+
 }

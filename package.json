@@ -18,7 +18,9 @@
     },
     "dependencies": {
         "@inertiajs/inertia": "^0.11.1",
+        "laravel-echo": "^1.19.0",
         "pinia": "^3.0.1",
-        "pinia-plugin-persistedstate": "^4.2.0"
+        "pinia-plugin-persistedstate": "^4.2.0",
+        "pusher-js": "^8.4.0"
     }
 }

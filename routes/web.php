@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\TableController;
 use App\Http\Controllers\AdminCategoryController;
 use App\Http\Controllers\User\UserMenuController;
+use App\Http\Controllers\User\WaitlistController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\User\UserOrderController;
 use App\Http\Controllers\User\UserTableController;
@@ -92,10 +93,16 @@ Route::get('/reservation', [HomeController::class, 'index'])->name('reservation'
         Route::post('/orders', [UserOrderController::class, 'store'])->name('orders.store');
         Route::get('/orders/confirmation/{order}', [UserOrderController::class, 'confirmation'])->name('orders.confirmation');
 
+        Route::get('/orders/preorder', [UserOrderController::class, 'preorder'])->name('orders.preorder');
+    Route::post('/orders/preorder', [UserOrderController::class, 'storePreorder'])->name('orders.preorder.store');
+
         Route::get('/tables', [UserTableController::class, 'index'])->name('tables.index');
         Route::post('/tables', [UserTableController::class, 'store'])->name('tables.store');
         Route::get('/tables/available', [UserTableController::class, 'availableTables'])->name('tables.available');
         Route::get('/reservations', [UserReservationsController::class, 'index'])->name('reservations.index');
+
+        Route::get('/waitlist', [WaitlistController::class, 'index'])->name('waitlist.index');
+    Route::post('/waitlist', [WaitlistController::class, 'store'])->name('waitlist.store');
 
 
     Route::get('/orders', [OrderController::class, 'index'])->name('admin.orders.index');
