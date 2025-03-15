@@ -1,86 +1,64 @@
 <template>
     <AdminLayout>
-      <div class="p-6 bg-white shadow rounded-lg">
-        <h1 class="text-2xl font-semibold mb-4">Orders</h1>
-
-        <!-- Success Message -->
-        <div v-if="successMessage" class="p-3 bg-green-200 text-green-800 rounded mb-4">
-          {{ successMessage }}
+      <section class="container mx-auto py-8 px-4">
+        <h2 class="text-3xl font-semibold mb-6">Kitchen Orders</h2>
+        <div class="grid gap-6">
+          <div v-for="order in orders" :key="order.id" class="bg-white p-6 rounded-lg shadow-md" :class="{ 'border-2 border-red-500': order.is_priority }">
+            <h3 class="text-xl font-bold mb-2">Order #{{ order.id }} {{ order.is_priority ? '(Priority)' : '' }}</h3>
+            <p><strong>User:</strong> {{ order.user_name }}</p>
+            <p><strong>Total:</strong> ${{ order.total_price }}</p>
+            <p><strong>Estimated Wait:</strong> {{ order.estimated_wait_minutes }} minutes</p>
+            <div class="flex items-center mt-2">
+              <label class="mr-2 font-semibold">Status:</label>
+              <select v-model="order.status" @change="updateStatus(order)" class="border p-2 rounded">
+                <option value="received">Received</option>
+                <option value="preparing">Preparing</option>
+                <option value="ready">Ready</option>
+                <option value="completed">Completed</option>
+              </select>
+            </div>
+            <button @click="togglePriority(order)" class="mt-2 text-blue-500">
+              {{ order.is_priority ? 'Remove Priority' : 'Set Priority' }}
+            </button>
+            <h4 class="font-semibold mt-4">Items:</h4>
+            <ul class="list-disc ml-6">
+              <li v-for="item in order.items" :key="item.name">
+                {{ item.name }} - Quantity: {{ item.quantity }}
+              </li>
+            </ul>
+          </div>
         </div>
-
-        <!-- Orders Table -->
-        <table class="w-full border-collapse border border-gray-300">
-          <thead>
-            <tr class="bg-gray-100">
-              <th class="border border-gray-300 p-2">#</th>
-              <th class="border border-gray-300 p-2">Customer</th>
-              <th class="border border-gray-300 p-2">Total</th>
-              <th class="border border-gray-300 p-2">Status</th>
-              <th class="border border-gray-300 p-2">Date</th>
-              <th class="border border-gray-300 p-2">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(order, index) in orders" :key="order.id">
-              <td class="border border-gray-300 p-2">{{ index + 1 }}</td>
-              <td class="border border-gray-300 p-2">{{ order.user.name }}</td>
-              <td class="border border-gray-300 p-2">${{ order.total }}</td>
-              <td class="border border-gray-300 p-2">
-                <span class="px-2 py-1 rounded" :class="statusClass(order.status)">
-                  {{ order.status }}
-                </span>
-              </td>
-              <td class="border border-gray-300 p-2">{{ formatDate(order.created_at) }}</td>
-              <td class="border border-gray-300 p-2">
-                <Link
-                  :href="route('admin.orders.show', order.id)"
-                  class="bg-blue-500 text-white px-3 py-1 rounded mr-2"
-                >
-                  View
-                </Link>
-                <button
-                  @click="deleteOrder(order.id)"
-                  class="bg-red-500 text-white px-3 py-1 rounded"
-                >
-                  Delete
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      </section>
     </AdminLayout>
   </template>
 
   <script>
-import AdminLayout from "@/Layouts/AdminLayout.vue";
-  import { router, Link } from "@inertiajs/vue3";
+  import { ref } from 'vue';
+  import { Inertia } from '@inertiajs/inertia';
+  import AdminLayout from '../../Layouts/AdminLayout.vue';
 
   export default {
-    components: { AdminLayout, Link },
-    props: { orders: Array },
-    data() {
-      return { successMessage: "" };
+    components: { AdminLayout },
+    props: {
+      orders: Array,
     },
-    methods: {
-      deleteOrder(id) {
-        if (confirm("Are you sure?")) {
-          router.delete(route("admin.orders.destroy", id), {
-            onSuccess: () => (this.successMessage = "Order deleted successfully."),
-          });
-        }
-      },
-      statusClass(status) {
-        return {
-          pending: "bg-yellow-200 text-yellow-800",
-          processing: "bg-blue-200 text-blue-800",
-          completed: "bg-green-200 text-green-800",
-          cancelled: "bg-red-200 text-red-800",
-        }[status];
-      },
-      formatDate(date) {
-        return new Date(date).toLocaleDateString();
-      },
+    setup(props) {
+      const orders = ref(props.orders);
+
+      const updateStatus = (order) => {
+        Inertia.put(route('admin.orders.status', order.id), { status: order.status }, {
+          onSuccess: () => console.log(`Order ${order.id} updated to ${order.status}`),
+          onError: (errors) => alert("Status update failed: " + JSON.stringify(errors)),
+        });
+      };
+
+      const togglePriority = (order) => {
+        Inertia.post(route('admin.orders.priority', order.id), {}, {
+          onSuccess: () => order.is_priority = !order.is_priority,
+        });
+      };
+
+      return { orders, updateStatus, togglePriority };
     },
   };
   </script>

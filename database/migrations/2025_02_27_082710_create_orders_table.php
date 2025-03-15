@@ -18,7 +18,9 @@ return new class extends Migration
             $table->foreignId('table_id')->nullable()->constrained('tables')->onDelete('set null'); // For dine-in orders
             $table->timestamp('pickup_time')->nullable(); // For takeout orders
             $table->string('delivery_address')->nullable(); // For delivery orders
-            $table->enum('status', ['pending', 'preparing', 'ready', 'completed', 'cancelled'])->default('pending');
+            $table->integer('estimated_wait_minutes')->nullable();
+            $table->boolean('is_priority')->default(false);
+            $table->enum('status', ['pending', 'received', 'preparing', 'ready', 'completed', 'cancelled'])->default('pending');
             $table->decimal('total_price', 10, 2)->default(0);
             $table->timestamp('ordered_at')->useCurrent();
             $table->timestamps();

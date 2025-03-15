@@ -11,7 +11,7 @@
         <div class="grid gap-6">
           <div v-for="item in menuItems" :key="item.id" class="bg-white p-4 rounded-lg shadow-md">
             <h4 class="font-bold">{{ item.name }}</h4>
-            <p>${{ item.price }}</p>
+            <p>${{ item.price }} (Prep: {{ item.prep_time }} min)</p>
             <input
               type="number"
               v-model="cart[item.id]"
@@ -35,7 +35,8 @@
   <script>
   import { ref } from 'vue';
   import { Inertia } from '@inertiajs/inertia';
-import UserLayout from '@/Layouts/UserLayout.vue';
+  import UserLayout from '../Layouts/UserLayout.vue';
+
   export default {
     components: { UserLayout },
     props: {

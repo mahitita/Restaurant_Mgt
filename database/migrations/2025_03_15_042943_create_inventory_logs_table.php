@@ -9,23 +9,22 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up()
+    public function up(): void
     {
-        Schema::create('queues', function (Blueprint $table) {
+        Schema::create('inventory_logs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('set null');
-            $table->integer('group_size');
-            $table->enum('status', ['waiting', 'seated', 'cancelled'])->default('waiting');
+            $table->foreignId('inventory_id')->constrained()->onDelete('cascade');
+            $table->enum('action', ['added', 'deducted']);
+            $table->integer('quantity');
             $table->timestamps();
         });
     }
-
 
     /**
      * Reverse the migrations.
      */
     public function down(): void
     {
-        Schema::dropIfExists('queues');
+        Schema::dropIfExists('inventory_logs');
     }
 };

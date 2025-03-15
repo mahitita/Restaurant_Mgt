@@ -5,6 +5,7 @@ use App\Models\Table;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Application;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\User\HomeController;
 use App\Http\Controllers\Admin\MenuController;
 use App\Http\Controllers\Admin\UserController;
@@ -43,7 +44,10 @@ use App\Http\Controllers\User\UserReservationsController;
 
 
 Route::prefix('admin')->group(function () {
+    // Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
+    Route::post('/dashboard/stock', [DashboardController::class, 'updateStock'])->name('admin.dashboard.stock');
+    Route::post('/dashboard/waste', [DashboardController::class, 'logWaste'])->name('admin.dashboard.waste');
 
     Route::get('/categories', [CategoryController::class, 'index'])->name('admin.categories.index');
     Route::post('/categories', [CategoryController::class, 'store'])->name('admin.categories.store');
@@ -58,6 +62,11 @@ Route::prefix('admin')->group(function () {
         Route::put('/menus/{menu}', [MenuController::class, 'update'])->name('admin.menus.update');
         Route::delete('/menus/{menu}', [MenuController::class, 'destroy'])->name('admin.menus.destroy');
 
+        Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory.index');
+        Route::post('/inventory', [InventoryController::class, 'store'])->name('inventory.store');
+        Route::patch('/inventory/{inventory}', [InventoryController::class, 'update'])->name('inventory.update');
+
+        Route::post('/orders/{order}/priority', [OrderController::class, 'togglePriority'])->name('admin.orders.priority');
 
                 Route::get('/reservations', [ReservationController::class, 'index'])->name('admin.reservations.index');
                 Route::get('/reservations/{reservation}', [ReservationController::class, 'show'])->name('admin.reservations.show');
@@ -92,7 +101,7 @@ Route::get('/reservation', [HomeController::class, 'index'])->name('reservation'
         Route::get('/orders', [UserOrderController::class, 'index'])->name('orders.index');
         Route::post('/orders', [UserOrderController::class, 'store'])->name('orders.store');
         Route::get('/orders/confirmation/{order}', [UserOrderController::class, 'confirmation'])->name('orders.confirmation');
-
+        Route::get('/orders/track/{order}', [UserOrderController::class, 'track'])->name('orders.track');
         Route::get('/orders/preorder', [UserOrderController::class, 'preorder'])->name('orders.preorder');
     Route::post('/orders/preorder', [UserOrderController::class, 'storePreorder'])->name('orders.preorder.store');
 

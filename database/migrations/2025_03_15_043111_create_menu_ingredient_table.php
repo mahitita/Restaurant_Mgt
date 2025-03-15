@@ -9,23 +9,22 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up()
+    public function up(): void
     {
-        Schema::create('inventory', function (Blueprint $table) {
+        Schema::create('menu_ingredient', function (Blueprint $table) {
             $table->id();
-            $table->string('item_name');
-            $table->integer('quantity');
-            $table->string('unit'); // e.g., kg, liter, pcs
+            $table->foreignId('menu_id')->constrained()->onDelete('cascade');
+    $table->foreignId('inventory_id')->constrained()->onDelete('cascade');
+    $table->integer('quantity'); // Amount of ingredient per menu item
             $table->timestamps();
         });
     }
-
 
     /**
      * Reverse the migrations.
      */
     public function down(): void
     {
-        Schema::dropIfExists('inventory');
+        Schema::dropIfExists('menu_ingredient');
     }
 };

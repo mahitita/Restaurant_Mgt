@@ -20,5 +20,11 @@ class Menu extends Model
     {
         return $this->hasMany(OrderItem::class);
     }
+
+    public function ingredients()
+{
+    return $this->belongsToMany(Inventory::class, 'menu_ingredient')->withPivot('quantity');
+}
+
 }
 

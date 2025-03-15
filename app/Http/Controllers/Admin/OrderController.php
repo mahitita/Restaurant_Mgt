@@ -9,28 +9,48 @@ use Inertia\Response;
 
 class OrderController extends Controller
 {
-    public function index(): Response
+    public function index()
     {
-        $orders = Order::with('user')->orderBy('ordered_at', 'desc')->get();
-        return Inertia::render('Admin/Orders/Index', ['orders' => $orders]);
+        $orders = Order::with('orderItems.menu', 'user')
+            ->whereIn('status', ['received', 'preparing'])
+            ->orderBy('is_priority', 'desc')
+            ->orderBy('created_at', 'asc')
+            ->get()
+            ->map(fn($order) => [
+                'id' => $order->id,
+                'user_name' => $order->user->name ?? 'Unknown',
+                'status' => $order->status,
+                'total_price' => $order->total_price,
+                'is_priority' => $order->is_priority,
+                'estimated_wait_minutes' => $order->estimated_wait_minutes,
+                'items' => $order->orderItems->map(fn($item) => [
+                    'name' => $item->menu->name,
+                    'quantity' => $item->quantity,
+                ]),
+            ]);
+
+        return Inertia::render('Admin/Orders/Index', [
+            'orders' => $orders,
+        ]);
     }
 
-    public function show(Order $order): Response
+    public function togglePriority(Order $order)
     {
-        return Inertia::render('Admin/Orders/Show', ['order' => $order]);
+        $order->is_priority = !$order->is_priority;
+        $order->save();
+
+        return redirect()->route('admin.orders.index')->with('success', 'Priority updated.');
     }
 
-    public function update(Request $request, Order $order)
+    public function updateStatus(Request $request, Order $order)
     {
-        $request->validate(['status' => 'required|in:pending,preparing,ready,completed,cancelled']);
-        $order->update(['status' => $request->status]);
+        $request->validate([
+            'status' => 'required|in:received,preparing,ready,completed',
+        ]);
 
-        return redirect()->route('admin.orders.index')->with('success', 'Order status updated!');
-    }
+        $order->status = $request->status;
+        $order->save();
 
-    public function destroy(Order $order)
-    {
-        $order->delete();
-        return redirect()->route('admin.orders.index')->with('success', 'Order deleted!');
+        return redirect()->route('admin.orders.index')->with('success', 'Order status updated.');
     }
 }
