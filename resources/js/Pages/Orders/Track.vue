@@ -20,8 +20,7 @@
 
   <script>
   import { ref, onMounted, onUnmounted } from 'vue';
-  import UserLayout from '../Layouts/UserLayout.vue';
-
+import UserLayout from '@/Layouts/UserLayout.vue';
   export default {
     components: { UserLayout },
     props: {

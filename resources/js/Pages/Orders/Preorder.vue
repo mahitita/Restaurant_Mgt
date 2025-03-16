@@ -35,8 +35,7 @@
   <script>
   import { ref } from 'vue';
   import { Inertia } from '@inertiajs/inertia';
-  import UserLayout from '../Layouts/UserLayout.vue';
-
+import UserLayout from '@/Layouts/UserLayout.vue';
   export default {
     components: { UserLayout },
     props: {
