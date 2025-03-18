@@ -11,24 +11,28 @@ class Inventory extends Model
 
     protected $fillable = ['name', 'quantity', 'threshold', 'expiry_date'];
 
+
+    public function purchases() {
+        return $this->hasMany(Purchase::class);
+    }
+
     public function logs()
     {
         return $this->hasMany(InventoryLog::class);
     }
 
-    public function isLowStock(): bool
+    public function addStock($amount)
     {
-        return $this->quantity <= $this->threshold;
+        $this->increment('quantity', $amount);
+        $this->logs()->create(['action' => 'added', 'quantity' => $amount]);
     }
 
-    public function isExpiringSoon(): bool
+    public function deductStock($amount)
     {
-        return $this->expiry_date && $this->expiry_date->isToday() || $this->expiry_date->isPast();
+        $this->decrement('quantity', $amount);
+        $this->logs()->create(['action' => 'deducted', 'quantity' => $amount]);
     }
 
-    public function menus()
-{
-    return $this->belongsToMany(Menu::class, 'menu_ingredient')->withPivot('quantity');
-}
+
 
 }

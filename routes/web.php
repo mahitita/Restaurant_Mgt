@@ -5,7 +5,6 @@ use App\Models\Table;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Application;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\User\HomeController;
 use App\Http\Controllers\Admin\MenuController;
 use App\Http\Controllers\Admin\UserController;
@@ -16,9 +15,11 @@ use App\Http\Controllers\AdminCategoryController;
 use App\Http\Controllers\User\UserMenuController;
 use App\Http\Controllers\User\WaitlistController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\PurchaseController;
 use App\Http\Controllers\User\UserOrderController;
 use App\Http\Controllers\User\UserTableController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\InventoryController;
 use App\Http\Controllers\Admin\ReservationController;
 use App\Http\Controllers\User\UserReservationsController;
 
@@ -62,9 +63,13 @@ Route::prefix('admin')->group(function () {
         Route::put('/menus/{menu}', [MenuController::class, 'update'])->name('admin.menus.update');
         Route::delete('/menus/{menu}', [MenuController::class, 'destroy'])->name('admin.menus.destroy');
 
-        Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory.index');
-        Route::post('/inventory', [InventoryController::class, 'store'])->name('inventory.store');
-        Route::patch('/inventory/{inventory}', [InventoryController::class, 'update'])->name('inventory.update');
+        Route::get('/inventory', [InventoryController::class, 'index']);
+        Route::post('/inventory', [InventoryController::class, 'store'])->name('admin.inventory.store');
+        Route::put('/inventory/{inventory}', [InventoryController::class, 'update'])->name('admin.inventory.update');
+        Route::delete('/inventory/{inventory}', [InventoryController::class, 'destroy'])->name('admin.inventory.destroy');
+        Route::post('/purchases', [PurchaseController::class, 'store'])->name('admin.purchases.store');
+
+        Route::post('/purchases', [PurchaseController::class, 'store'])->name('purchases.store');
 
         Route::post('/orders/{order}/priority', [OrderController::class, 'togglePriority'])->name('admin.orders.priority');
 

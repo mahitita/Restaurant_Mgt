@@ -2,43 +2,54 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Inventory;
 use Inertia\Inertia;
-use Inertia\Response;
+use App\Models\Inventory;
+use Illuminate\Http\Request;
+use App\Events\InventoryUpdated;
+use App\Http\Controllers\Controller;
 
 class InventoryController extends Controller
 {
-    public function index(): Response
+    public function index()
     {
-        $items = Inventory::all();
-        return Inertia::render('Admin/Inventory/Index', ['items' => $items]);
+        $inventory = Inventory::with('purchases')->get();
+        return Inertia::render('Admin/Inventory/Index', ['inventory' => $inventory]);
     }
 
     public function store(Request $request)
     {
-        $request->validate([
-            'item_name' => 'required|unique:inventory',
-            'quantity' => 'required|integer',
-            'unit' => 'required'
+        $validated = $request->validate([
+            'name' => 'required|string|unique:inventories,name',
+            'quantity' => 'required|integer|min:0',
+            'threshold' => 'required|integer|min:1',
+            'expiry_date' => 'nullable|date|after:today',
         ]);
 
-        Inventory::create($request->all());
-        return redirect()->route('admin.inventory.index')->with('success', 'Inventory item added!');
+        $inventory = Inventory::create($validated);
+         broadcast(new InventoryUpdated($inventory))->toOthers();
+        return redirect()->back()->with('success', 'Inventory item added.');
     }
 
     public function update(Request $request, Inventory $inventory)
     {
-        $request->validate(['quantity' => 'required|integer']);
-        $inventory->update(['quantity' => $request->quantity]);
+        $validated = $request->validate([
+            'name' => 'required|string|unique:inventories,name,' . $inventory->id,
+            'quantity' => 'required|integer|min:0',
+            'threshold' => 'required|integer|min:1',
+            'expiry_date' => 'nullable|date|after:today',
+        ]);
 
-        return redirect()->route('admin.inventory.index')->with('success', 'Inventory updated!');
+        $inventory->update($validated);
+        // broadcast(new InventoryUpdated($inventory))->toOthers();
+
+        return redirect()->back()->with('success', 'Inventory updated.');
     }
 
     public function destroy(Inventory $inventory)
     {
         $inventory->delete();
-        return redirect()->route('admin.inventory.index')->with('success', 'Item removed!');
+        // broadcast(new InventoryUpdated($inventory))->toOthers();
+
+        return redirect()->back()->with('success', 'Inventory item deleted.');
     }
 }
