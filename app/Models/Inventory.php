@@ -9,30 +9,45 @@ class Inventory extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'quantity', 'threshold', 'expiry_date'];
+    protected $fillable = [
+        'name',
+        'quantity',
+        'unit_cost',
+        'unit',
+        'threshold',
+        'expiry_date',
+    ];
 
+    protected $dates = ['expiry_date'];
 
-    public function purchases() {
-        return $this->hasMany(Purchase::class);
-    }
-
-    public function logs()
+    public function menus()
     {
-        return $this->hasMany(InventoryLog::class);
+        return $this->belongsToMany(Menu::class, 'inventory_menu')
+                    ->withPivot('quantity', 'unit')
+                    ->withTimestamps();
     }
 
     public function addStock($amount)
     {
         $this->increment('quantity', $amount);
-        $this->logs()->create(['action' => 'added', 'quantity' => $amount]);
     }
 
     public function deductStock($amount)
     {
-        $this->decrement('quantity', $amount);
-        $this->logs()->create(['action' => 'deducted', 'quantity' => $amount]);
+        if ($this->quantity >= $amount) {
+            $this->decrement('quantity', $amount);
+        } else {
+            throw new \Exception("Insufficient stock for {$this->name}");
+        }
     }
 
+    public function isLowStock()
+    {
+        return $this->quantity <= $this->threshold;
+    }
 
-
+    public function isExpired()
+    {
+        return $this->expiry_date && now()->greaterThan($this->expiry_date);
+    }
 }

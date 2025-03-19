@@ -18,10 +18,8 @@ return new class extends Migration
             $table->foreignId('category_id')->constrained('categories')->onDelete('cascade');
             $table->text('description')->nullable();
             $table->string('image')->nullable();
-            $table->integer('prep_time')->default(15)->nullable();
-            $table->integer('stock_quantity')->default(100)->nullable();
-            $table->decimal('cost', 8, 2)->default(0)->nullable();
-            $table->foreignId('inventory_id')->nullable()->constrained()->onDelete('cascade');
+            $table->integer('prep_time')->default(15); 
+            $table->decimal('cost', 8, 2)->default(0);
             $table->boolean('available')->default(true);
             $table->timestamps();
         });

@@ -4,6 +4,7 @@ import piniaPersist from 'pinia-plugin-persistedstate';
 import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
+import { Inertia } from '@inertiajs/inertia';
 import './bootstrap';
 import '../css/app.css';
 // Explicit import for testing
@@ -39,3 +40,4 @@ createInertiaApp({
     color: '#4B5563',
   },
 });
+window.Inertia = Inertia;

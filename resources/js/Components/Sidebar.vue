@@ -65,6 +65,9 @@
         { name: 'Dashboard', route: 'admin.dashboard', icon: '🏠' },
         { name: 'Categories', route: 'admin.categories', icon: '📦' },
         { name: 'Orders', route: 'admin.orders.index', icon: '📝' },
+        { name: 'Menus', route: 'admin.menus', icon: '🍽️' },
+        { name: 'Inventory', route: 'admin.inventory.index', icon: '📊' },
+
       ];
 
       const page = usePage();
