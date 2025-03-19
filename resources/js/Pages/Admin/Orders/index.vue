@@ -35,8 +35,7 @@
   <script>
   import { ref } from 'vue';
   import { Inertia } from '@inertiajs/inertia';
-  import AdminLayout from '../../Layouts/AdminLayout.vue';
-
+import AdminLayout from '@/Layouts/AdminLayout.vue';
   export default {
     components: { AdminLayout },
     props: {

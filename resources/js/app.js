@@ -4,7 +4,8 @@ import piniaPersist from 'pinia-plugin-persistedstate';
 import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
-
+import './bootstrap';
+import '../css/app.css';
 // Explicit import for testing
 import OrderConfirmation from './Pages/OrderConfirmation.vue';
 

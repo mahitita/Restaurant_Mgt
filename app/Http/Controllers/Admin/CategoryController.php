@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
-    public function index() // Method names should typically be lowercase
+    public function index()
     {
         $categories = Category::all();
         return inertia('Admin/Categories/Index', ['categories' => $categories]);
@@ -22,12 +22,12 @@ class CategoryController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|unique:categories,name', // Specify the column for uniqueness
+            'name' => 'required|string|unique:categories,name',
         ]);
 
         Category::create(['name' => $request->name]);
 
-        return redirect()->route('admin.categories.index')->with('success', 'Category created successfully.'); // Use route name
+        return redirect()->route('admin.categories')->with('success', 'Category created successfully.');
     }
 
     public function edit(Category $category)
@@ -38,17 +38,17 @@ class CategoryController extends Controller
     public function update(Request $request, Category $category)
     {
         $request->validate([
-            'name' => 'required|string|unique:categories,name,' . $category->id, // Correct uniqueness validation
+            'name' => 'required|string|unique:categories,name,' . $category->id,
         ]);
 
         $category->update(['name' => $request->name]);
 
-        return redirect()->route('admin.categories.index')->with('success', 'Category updated successfully.'); // Use route name
+        return redirect()->route('admin.categories')->with('success', 'Category updated successfully.');
     }
 
     public function destroy(Category $category)
     {
         $category->delete();
-        return redirect()->route('admin.categories.index')->with('success', 'Category deleted successfully.'); // Use route name
+        return redirect()->route('admin.categories')->with('success', 'Category deleted successfully.');
     }
 }

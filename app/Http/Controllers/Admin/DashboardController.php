@@ -24,26 +24,26 @@ class DashboardController extends Controller
 
         // Staff Data
         $activeOrders = Order::whereIn('status', ['received', 'preparing'])->count();
-        $tableTurnover = Table::where('status', 'occupied')->avg(fn($t) => now()->diffInMinutes($t->updated_at));
+        // $tableTurnover = Table::where('status', 'occupied')->avg(fn($t) => now()->diffInMinutes($t->updated_at));
         $suggestedStaff = max(1, ceil($activeOrders / 5)); // 1 staff per 5 orders
 
         // Inventory Data
         $menuItems = Menu::all();
         $lowStock = $menuItems->filter(fn($item) => $item->stock_quantity < 10);
         $dailyUsage = OrderItem::whereDate('created_at', today())
-            ->groupBy('menu_id')
-            ->map->sum('quantity');
+            ->groupBy('menu_id');
+            // ->map->sum('quantity');
 
         // Customer Data
         $topItems = OrderItem::whereDate('created_at', today())
             ->with('menu')
             ->groupBy('menu_id')
-            ->map->sum('quantity')
-            ->sortDesc()
+            // ->map->sum('quantity')
+            // ->sortDesc()
             ->take(3);
         $repeatCustomers = Order::whereDate('created_at', today())
             ->groupBy('user_id')
-            ->filter(fn($orders) => $orders->count() > 1)
+            // ->filter(fn($orders) => $orders->count() > 1)
             ->count();
         // $feedback = Feedback::whereDate('created_at', today())->avg('rating') ?? 0;
 
@@ -66,10 +66,10 @@ class DashboardController extends Controller
                 'daily_usage' => $dailyUsage,
             ],
             'customers' => [
-                'top_items' => $topItems->map(fn($qty, $id) => [
-                    'name' => Menu::find($id)->name,
-                    'quantity' => $qty,
-                ]),
+                // 'top_items' => $topItems->map(fn($qty, $id) => [
+                    // 'name' => Menu::find($id)->name,
+                    // 'quantity' => $qty,
+                // ]),
                 'repeat_customers' => $repeatCustomers,
                 // 'average_rating' => round($feedback, 1),
             ],

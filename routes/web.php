@@ -50,7 +50,7 @@ Route::prefix('admin')->group(function () {
     Route::post('/dashboard/stock', [DashboardController::class, 'updateStock'])->name('admin.dashboard.stock');
     Route::post('/dashboard/waste', [DashboardController::class, 'logWaste'])->name('admin.dashboard.waste');
 
-    Route::get('/categories', [CategoryController::class, 'index'])->name('admin.categories.index');
+    Route::get('/categories', [CategoryController::class, 'index'])->name('admin.categories');
     Route::post('/categories', [CategoryController::class, 'store'])->name('admin.categories.store');
     Route::get('/categories/{category}/edit', [CategoryController::class, 'edit'])->name('admin.categories.edit');
     Route::put('/categories/{category}', [CategoryController::class, 'update'])->name('admin.categories.update');
