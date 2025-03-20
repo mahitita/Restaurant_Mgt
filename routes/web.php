@@ -78,13 +78,11 @@ Route::prefix('admin')->group(function () {
         Route::post('/purchases', [PurchaseController::class, 'store'])->name('purchases.store');
 
         Route::post('/orders/{order}/priority', [OrderController::class, 'togglePriority'])->name('admin.orders.priority');
-
-                Route::get('/reservations', [ReservationController::class, 'index'])->name('admin.reservations.index');
-                Route::get('/reservations/{reservation}', [ReservationController::class, 'show'])->name('admin.reservations.show');
-                Route::put('/reservations/{reservation}', [ReservationController::class, 'update'])->name('admin.reservations.update');
-                Route::delete('/reservations/{reservation}', [ReservationController::class, 'destroy'])->name('admin.reservations.destroy');
-                Route::put('/reservations/{reservation}/status', [ReservationController::class, 'updateStatus'])->name('admin.reservations.status');
-
+        Route::get('/reservations', [ReservationController::class, 'index'])->name('admin.reservations.index');
+        Route::get('/reservations/{reservation}/edit', [ReservationController::class, 'edit'])->name('admin.reservations.edit');
+        Route::put('/reservations/{reservation}', [ReservationController::class, 'update'])->name('admin.reservations.update');
+        Route::delete('/reservations/{reservation}', [ReservationController::class, 'destroy'])->name('admin.reservations.destroy');
+        
                     Route::get('/users', [UserController::class, 'index'])->name('admin.users.index');
                     Route::get('/users/create', [UserController::class, 'create'])->name('admin.users.create');
                     Route::post('/users', [UserController::class, 'store'])->name('admin.users.store');
@@ -92,14 +90,14 @@ Route::prefix('admin')->group(function () {
                     Route::put('/users/{user}', [UserController::class, 'update'])->name('admin.users.update');
                     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('admin.users.destroy');
 
-    Route::get('/tables', [TableController::class, 'index'])->name('admin.tables.index');
-    Route::get('/tables/create', [TableController::class, 'create'])->name('admin.tables.create');
-    Route::post('/tables', [TableController::class, 'store'])->name('admin.tables.store');
-    Route::get('/tables/{table}/edit', [TableController::class, 'edit'])->name('admin.tables.edit');
-    Route::put('/tables/{table}', [TableController::class, 'update'])->name('admin.tables.update');
-    Route::delete('/tables/{table}', [TableController::class, 'destroy'])->name('admin.tables.destroy');
-    Route::put('/tables/{table}/status', [TableController::class, 'updateStatus'])->name('admin.tables.status');
-});
+                    Route::get('/tables', [TableController::class, 'index'])->name('admin.tables.index');
+                    Route::get('/tables/create', [TableController::class, 'create'])->name('admin.tables.create');
+                    Route::post('/tables', [TableController::class, 'store'])->name('admin.tables.store');
+                    Route::get('/tables/{table}/edit', [TableController::class, 'edit'])->name('admin.tables.edit');
+                    Route::put('/tables/{table}', [TableController::class, 'update'])->name('admin.tables.update');
+                    Route::delete('/tables/{table}', [TableController::class, 'destroy'])->name('admin.tables.destroy');
+                    Route::put('/tables/{table}/status', [TableController::class, 'updateStatus'])->name('admin.tables.updateStatus');
+                });
 
 
 

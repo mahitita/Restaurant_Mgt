@@ -1,87 +1,100 @@
 <template>
-    <AdminLayout>
-      <section class="container mx-auto py-8 px-4">
-        <h2 class="text-3xl font-semibold mb-6">Manage Reservations</h2>
-        <div class="mb-6">
-          <label for="dateFilter" class="block font-semibold mb-2">Filter by Date:</label>
-          <input
-            type="date"
-            v-model="selectedDate"
-            @change="filterReservations"
-            class="border p-2 rounded w-full max-w-xs"
-          />
-        </div>
-        <div v-if="filteredReservations.length === 0" class="text-gray-500">
-          No reservations found for this date.
-        </div>
-        <div v-else class="grid gap-6">
-          <div
-            v-for="reservation in filteredReservations"
-            :key="reservation.id"
-            class="bg-white p-6 rounded-lg shadow-md"
-          >
-            <h3 class="text-xl font-bold mb-2">Reservation #{{ reservation.id }}</h3>
-            <p><strong>Table:</strong> {{ reservation.table_number }}</p>
-            <p><strong>User:</strong> {{ reservation.user_name }}</p>
-            <p><strong>Time:</strong> {{ reservation.reservation_time }}</p>
-            <p><strong>Deposit:</strong> ${{ reservation.deposit_amount }}</p>
-            <div class="flex items-center mt-2">
-              <label class="mr-2 font-semibold">Status:</label>
-              <select
-                v-model="reservation.status"
-                @change="updateStatus(reservation)"
-                class="border p-2 rounded"
-              >
-                <option value="pending">Pending</option>
-                <option value="confirmed">Confirmed</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </section>
-    </AdminLayout>
+    <div class="container mx-auto p-6 bg-white shadow-lg rounded-lg">
+      <h1 class="text-3xl font-semibold mb-6">Reservation Management</h1>
+
+      <div v-if="flash.success" class="bg-green-100 p-3 mb-4 rounded">
+        {{ flash.success }}
+      </div>
+      <div v-if="flash.error" class="bg-red-100 p-3 mb-4 rounded">
+        {{ flash.error }}
+      </div>
+
+      <div class="flex mb-4 space-x-2">
+        <button @click="goToTables" class="bg-blue-600 text-white p-3 rounded hover:bg-blue-700 transition duration-300">
+          Back to Tables
+        </button>
+        <input
+          v-model="searchQuery"
+          type="text"
+          class="border p-2 rounded w-full max-w-md"
+          placeholder="Search by table number or user..."
+        />
+      </div>
+
+      <table class="w-full border-collapse shadow-md">
+        <thead>
+          <tr class="bg-gray-200">
+            <th class="p-3 text-left">Table Number</th>
+            <th class="p-3 text-left">User</th>
+            <th class="p-3 text-left">Reservation Time</th>
+            <th class="p-3 text-left">Status</th>
+            <th class="p-3 text-left">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="reservation in filteredReservations" :key="reservation.id">
+            <td class="p-3">{{ reservation.table_number }}</td>
+            <td class="p-3">{{ reservation.user_name }}</td>
+            <td class="p-3">{{ reservation.reservation_time }}</td>
+            <td class="p-3">
+              <span :class="{'text-green-600': reservation.status === 'Confirmed', 'text-red-600': reservation.status === 'Cancelled'}">
+                {{ reservation.status }}
+              </span>
+            </td>
+            <td class="p-3">
+              <button @click="goToEdit(reservation.id)" class="text-blue-600 hover:text-blue-800 mr-2">Edit</button>
+              <button @click="cancelReservation(reservation)" class="text-red-600 hover:text-red-800">Cancel</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </template>
 
   <script>
-  import { ref, computed } from 'vue';
   import { Inertia } from '@inertiajs/inertia';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
   export default {
-    components: { AdminLayout },
+    layout: AdminLayout,
     props: {
       reservations: Array,
-      selectedDate: String,
     },
-    setup(props) {
-      const reservations = ref(props.reservations);
-      const selectedDate = ref(props.selectedDate);
-
-      const filteredReservations = computed(() => {
-        return reservations.value.filter(reservation =>
-          new Date(reservation.reservation_time).toDateString() === new Date(selectedDate.value).toDateString()
+    data() {
+      return {
+        searchQuery: '',
+      };
+    },
+    computed: {
+      flash() {
+        return this.$page.props.flash || {};
+      },
+      filteredReservations() {
+        if (!this.searchQuery) return this.reservations;
+        const query = this.searchQuery.toLowerCase();
+        return this.reservations.filter(reservation =>
+          reservation.table_number.toLowerCase().includes(query) ||
+          reservation.user_name.toLowerCase().includes(query)
         );
-      });
-
-      const updateStatus = (reservation) => {
-        Inertia.put(route('admin.reservations.status', reservation.id), { status: reservation.status }, {
-          onSuccess: () => {
-            console.log(`Reservation ${reservation.id} status updated to ${reservation.status}`);
-          },
-          onError: (errors) => alert("Status update failed: " + JSON.stringify(errors)),
-        });
-      };
-
-      const filterReservations = () => {
-        Inertia.get(route('admin.reservations.index'), { date: selectedDate.value }, {
-          preserveState: true,
-          onSuccess: (page) => {
-            reservations.value = page.props.reservations;
-          },
-        });
-      };
-
-      return { reservations, selectedDate, filteredReservations, updateStatus, filterReservations };
+      },
+    },
+    methods: {
+      goToTables() {
+        Inertia.visit('/admin/tables');
+      },
+      goToEdit(reservationId) {
+        Inertia.visit(`/admin/reservations/${reservationId}/edit`);
+      },
+      cancelReservation(reservation) {
+        if (confirm(`Are you sure you want to cancel reservation for table ${reservation.table_number}?`)) {
+          Inertia.delete(`/admin/reservations/${reservation.id}`);
+        }
+      },
     },
   };
   </script>
+
+  <style scoped>
+  .container {
+    max-width: 1200px; /* Adjust as necessary */
+  }
+  </style>
