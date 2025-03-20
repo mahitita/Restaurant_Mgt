@@ -168,4 +168,24 @@ class MenuController extends Controller
         $menu->delete(); // Cascade deletes inventory_menu entries
         return redirect()->route('admin.menus')->with('success', 'Menu item deleted successfully.');
     }
+
+    public function profitReport()
+{
+    $menus = Menu::with(['category', 'inventories'])->get()->map(function ($menu) {
+        $profit = $menu->price - $menu->cost;
+        $profitMargin = $menu->price > 0 ? ($profit / $menu->price) * 100 : 0; // Percentage
+        return [
+            'id' => $menu->id,
+            'name' => $menu->name,
+            'category' => $menu->category ? $menu->category->name : 'N/A',
+            'price' => $menu->price,
+            'cost' => $menu->cost,
+            'profit' => $profit,
+            'profit_margin' => round($profitMargin, 2), // Rounded to 2 decimals
+            'available' => $menu->available,
+        ];
+    });
+
+    return inertia('Admin/Menu/ProfitReport', ['menus' => $menus]);
+}
 }

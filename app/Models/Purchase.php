@@ -9,9 +9,18 @@ class Purchase extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['inventory_id', 'quantity', 'cost', 'supplier', 'purchased_at'];
+    protected $fillable = [
+        'inventory_id',
+        'quantity',
+        'cost',
+        'supplier',
+        'purchased_at',
+    ];
 
-    public function inventory() {
+    protected $dates = ['purchased_at'];
+
+    public function inventory()
+    {
         return $this->belongsTo(Inventory::class);
     }
 }

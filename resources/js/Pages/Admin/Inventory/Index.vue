@@ -1,97 +1,140 @@
 <template>
-    <AdminLayout>
-      <div class="container mx-auto p-6 bg-white shadow-lg rounded-lg">
-        <h1 class="text-3xl font-semibold mb-6">Inventory Management</h1>
+    <div class="container mx-auto p-4">
+      <h1 class="text-2xl font-bold mb-4">Inventory Management</h1>
 
-        <!-- Flash messages -->
-        <div v-if="flash.success" class="bg-green-100 p-3 mb-4 text-green-800 rounded-md">
-          {{ flash.success }}
-        </div>
-        <div v-if="flash.error" class="bg-red-100 p-3 mb-4 text-red-800 rounded-md">
-          {{ flash.error }}
-        </div>
+      <div v-if="flash.success" class="bg-green-100 p-2 mb-4 rounded">
+        {{ flash.success }}
+      </div>
+      <div v-if="flash.error" class="bg-red-100 p-2 mb-4 rounded">
+        {{ flash.error }}
+      </div>
 
-        <div class="flex justify-between mb-4">
-          <button @click="goToCreate" class="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition duration-300">
-            Add New Inventory Item
-          </button>
-          <div class="relative">
+      <div class="flex justify-between mb-4">
+        <button @click="goToCreate" class="bg-blue-500 text-white p-2 rounded">
+          Add New Inventory Item
+        </button>
+        <div class="relative">
             <input
               type="text"
               v-model="searchQuery"
-              placeholder="Search Inventory..."
-              class="border p-2 rounded-lg w-64"
+              placeholder="Search Menu..."
+              class="border p-2 rounded-lg w-full max-w-xs"
             />
             <button class="absolute top-2 right-2 text-gray-500">🔍</button>
           </div>
-        </div>
+      </div>
 
-        <!-- Inventory Table -->
-        <table class="w-full table-auto bg-gray-50 shadow-md rounded-lg">
-          <thead class="bg-gray-200">
-            <tr>
-              <th class="p-3 text-left">Name</th>
-              <th class="p-3 text-left">Quantity</th>
-              <th class="p-3 text-left">Unit Cost</th>
-              <th class="p-3 text-left">Unit</th>
-              <th class="p-3 text-left">Threshold</th>
-              <th class="p-3 text-left">Expiry Date</th>
-              <th class="p-3 text-left">Status</th>
-              <th class="p-3 text-left">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="inventory in filteredInventory" :key="inventory.id" :class="{'bg-yellow-100': inventory.low_stock, 'bg-red-100': inventory.expired}">
-              <td class="p-3">{{ inventory.name }}</td>
-              <td class="p-3">{{ inventory.quantity }}</td>
-              <td class="p-3">${{ inventory.unit_cost }}</td>
-              <td class="p-3">{{ inventory.unit }}</td>
-              <td class="p-3">{{ inventory.threshold }}</td>
-              <td class="p-3">{{ inventory.expiry_date || 'N/A' }}</td>
-              <td class="p-3">
-                <span v-if="inventory.expired" class="text-red-600">Expired</span>
-                <span v-else-if="inventory.low_stock" class="text-yellow-600">Low Stock</span>
-                <span v-else class="text-green-600">Normal</span>
-              </td>
-              <td class="p-3 flex space-x-2">
-                <button @click="goToEdit(inventory.id)" class="text-blue-600 hover:text-blue-800">Edit</button>
-                <button @click="deleteInventory(inventory)" class="text-red-600 hover:text-red-800">Delete</button>
-                <button @click="showAddStockModal(inventory)" class="text-green-600 hover:text-green-800">Add Stock</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <table class="w-full border-collapse">
+        <thead>
+          <tr class="bg-gray-200">
+            <th class="p-2">Name</th>
+            <th class="p-2">Quantity</th>
+            <th class="p-2">Unit Cost</th>
+            <th class="p-2">Unit</th>
+            <th class="p-2">Threshold</th>
+            <th class="p-2">Expiry Date</th>
+            <th class="p-2">Status</th>
+            <th class="p-2">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="inventory in filteredInventories"
+            :key="inventory.id"
+            :class="{ 'bg-yellow-100': inventory.low_stock, 'bg-red-100': inventory.expired }"
+          >
+            <td class="p-2">{{ inventory.name }}</td>
+            <td class="p-2">{{ inventory.quantity }}</td>
+            <td class="p-2">${{ inventory.unit_cost }}</td>
+            <td class="p-2">{{ inventory.unit }}</td>
+            <td class="p-2">{{ inventory.threshold }}</td>
+            <td class="p-2">{{ inventory.expiry_date || 'N/A' }}</td>
+            <td class="p-2">
+              <span v-if="inventory.expired">Expired</span>
+              <span v-else-if="inventory.low_stock">Low Stock</span>
+              <span v-else>Normal</span>
+            </td>
+            <td class="p-2">
+              <button @click="goToEdit(inventory.id)" class="text-blue-500 mr-2">Edit</button>
+              <button @click="deleteInventory(inventory)" class="text-red-500 mr-2">Delete</button>
+              <button @click="showAddStockModal(inventory)" class="text-green-500 mr-2">Add Stock</button>
+              <button @click="goToPurchaseHistory(inventory.id)" class="text-purple-500">History</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
 
-        <!-- Add Stock Modal -->
-        <div v-if="selectedInventory" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
-          <div class="bg-white p-6 rounded-lg shadow-lg">
-            <h2 class="text-xl font-semibold mb-4">Add Stock to {{ selectedInventory.name }}</h2>
-            <input v-model="stockAmount" type="number" min="1" class="border p-2 mb-4 w-full" placeholder="Amount" />
-            <div class="flex justify-end space-x-2">
-              <button @click="addStock" class="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700">Add</button>
-              <button @click="selectedInventory = null" class="bg-gray-600 text-white py-2 px-4 rounded hover:bg-gray-700">Cancel</button>
-            </div>
+      <!-- Add Stock Modal -->
+      <div v-if="selectedInventory" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
+        <div class="bg-white p-4 rounded w-96">
+          <h2 class="text-xl mb-4">Add Stock to {{ selectedInventory.name }}</h2>
+          <div class="mb-4">
+            <label class="block text-gray-700">Amount</label>
+            <input
+              v-model.number="stockForm.amount"
+              type="number"
+              min="1"
+              class="border p-2 w-full"
+              placeholder="Amount"
+              required
+            />
+          </div>
+          <div class="mb-4">
+            <label class="block text-gray-700">Total Cost ($)</label>
+            <input
+              v-model.number="stockForm.total_cost"
+              type="number"
+              step="0.01"
+              min="0"
+              class="border p-2 w-full"
+              placeholder="Total Cost"
+              required
+            />
+          </div>
+          <div class="mb-4">
+            <label class="block text-gray-700">Supplier</label>
+            <input
+              v-model="stockForm.supplier"
+              type="text"
+              class="border p-2 w-full"
+              placeholder="Supplier (optional)"
+            />
+          </div>
+          <div class="flex justify-end">
+            <button
+              @click.prevent="addStock"
+              class="bg-green-500 text-white p-2 rounded mr-2"
+            >
+              Add
+            </button>
+            <button
+              @click="closeModal"
+              class="text-gray-500 p-2"
+            >
+              Cancel
+            </button>
           </div>
         </div>
       </div>
-    </AdminLayout>
+    </div>
   </template>
 
   <script>
   import { Inertia } from '@inertiajs/inertia';
-  import AdminLayout from '@/Layouts/AdminLayout.vue';
-
+import AdminLayout from '@/Layouts/AdminLayout.vue';
   export default {
+    layout: AdminLayout,
     props: {
       inventories: Array,
-    },
-    components: {
-      AdminLayout,
     },
     data() {
       return {
         selectedInventory: null,
-        stockAmount: '',
+        stockForm: {
+          amount: '',
+          total_cost: '',
+          supplier: '',
+        },
         searchQuery: '',
       };
     },
@@ -99,9 +142,11 @@
       flash() {
         return this.$page.props.flash || {};
       },
-      filteredInventory() {
+      filteredInventories() {
+        if (!this.searchQuery) return this.inventories;
+        const query = this.searchQuery.toLowerCase();
         return this.inventories.filter(inventory =>
-          inventory.name.toLowerCase().includes(this.searchQuery.toLowerCase())
+          inventory.name.toLowerCase().includes(query)
         );
       },
     },
@@ -113,73 +158,53 @@
         Inertia.visit(`/admin/inventory/${inventoryId}/edit`);
       },
       deleteInventory(inventory) {
-        if (confirm(`Delete ${inventory.name}?`)) {
+        if (confirm(`Are you sure you want to delete ${inventory.name}?`)) {
           Inertia.delete(`/admin/inventory/${inventory.id}`);
         }
       },
+      goToPurchaseHistory(inventoryId) {
+        Inertia.visit(`/admin/inventory/${inventoryId}/purchase-history`);
+      },
       showAddStockModal(inventory) {
+        console.log('Opening modal for:', inventory.name);
         this.selectedInventory = inventory;
-        this.stockAmount = '';
+        this.stockForm = { amount: '', total_cost: '', supplier: '' };
+      },
+      closeModal() {
+        console.log('Closing modal');
+        this.selectedInventory = null;
       },
       addStock() {
-        if (this.stockAmount > 0) {
-          Inertia.post(`/admin/inventory/${this.selectedInventory.id}/add-stock`, {
-            amount: this.stockAmount,
-          }, {
-            onSuccess: () => this.selectedInventory = null,
+        console.log('Add button clicked with:', this.stockForm);
+        const amount = Number(this.stockForm.amount);
+        const totalCost = Number(this.stockForm.total_cost);
+
+        if (amount > 0 && totalCost >= 0) {
+          const payload = {
+            amount: amount,
+            total_cost: totalCost,
+            supplier: this.stockForm.supplier || null,
+          };
+          console.log('Sending POST request:', {
+            url: `/admin/inventory/${this.selectedInventory.id}/add-stock`,
+            data: payload,
           });
+          Inertia.post(`/admin/inventory/${this.selectedInventory.id}/add-stock`, payload, {
+            onSuccess: () => {
+              console.log('Stock added successfully');
+              this.selectedInventory = null;
+            },
+            onError: (errors) => {
+              console.log('Errors:', errors);
+            },
+            onFinish: () => {
+              console.log('Request finished');
+            },
+          });
+        } else {
+          console.log('Validation failed:', { amount, totalCost });
         }
       },
     },
   };
   </script>
-
-  <style scoped>
-  .alert-success {
-    @apply bg-green-100 text-green-700 p-3 rounded mb-4;
-  }
-
-  .alert-error {
-    @apply bg-red-100 text-red-700 p-3 rounded mb-4;
-  }
-
-  .btn-primary {
-    @apply bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition;
-  }
-
-  .btn-secondary {
-    @apply text-blue-500 hover:underline;
-  }
-
-  .btn-danger {
-    @apply text-red-500 hover:underline;
-  }
-
-  .btn-success {
-    @apply text-green-500 hover:underline;
-  }
-
-  .btn-cancel {
-    @apply text-gray-500 hover:underline;
-  }
-
-  .badge-danger {
-    @apply bg-red-500 text-white px-2 py-1 rounded;
-  }
-
-  .badge-warning {
-    @apply bg-yellow-500 text-white px-2 py-1 rounded;
-  }
-
-  .badge-success {
-    @apply bg-green-500 text-white px-2 py-1 rounded;
-  }
-
-  .modal-overlay {
-    @apply fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50;
-  }
-
-  .modal-content {
-    @apply bg-white p-8 rounded-lg shadow-lg w-full max-w-lg;
-  }
-  </style>

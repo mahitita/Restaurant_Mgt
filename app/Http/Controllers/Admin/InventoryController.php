@@ -74,10 +74,21 @@ class InventoryController extends Controller
     {
         $validated = $request->validate([
             'amount' => 'required|integer|min:1',
+            'total_cost' => 'required|numeric|min:0',
+            'supplier' => 'nullable|string|max:255',
         ]);
 
-        $inventory->addStock($validated['amount']);
+        $inventory->addStock($validated['amount'], $validated['total_cost'], $validated['supplier']);
 
         return redirect()->route('admin.inventory.index')->with('success', "Added {$validated['amount']} to {$inventory->name}.");
+    }
+
+    public function purchaseHistory(Inventory $inventory)
+    {
+        $purchases = $inventory->purchases()->orderBy('purchased_at', 'desc')->get();
+        return inertia('Admin/Inventory/PurchaseHistory', [
+            'inventory' => $inventory,
+            'purchases' => $purchases,
+        ]);
     }
 }

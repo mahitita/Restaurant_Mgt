@@ -67,6 +67,8 @@
         { name: 'Orders', route: 'admin.orders.index', icon: '📝' },
         { name: 'Menus', route: 'admin.menus', icon: '🍽️' },
         { name: 'Inventory', route: 'admin.inventory.index', icon: '📊' },
+        { name: 'Profit Report', route: 'admin.menus.profit-report', icon: '📈' },
+
 
       ];
 

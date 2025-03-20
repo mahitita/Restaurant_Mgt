@@ -62,6 +62,7 @@ Route::prefix('admin')->group(function () {
     Route::get('/menus/{menu}/edit', [MenuController::class, 'edit'])->name('admin.menus.edit');
     Route::put('/menus/{menu}', [MenuController::class, 'update'])->name('admin.menus.update');
     Route::delete('/menus/{menu}', [MenuController::class, 'destroy'])->name('admin.menus.destroy');
+    Route::get('/menus/profit-report', [MenuController::class, 'profitReport'])->name('admin.menus.profit-report');
 
     Route::get('/inventory', [InventoryController::class, 'index'])->name('admin.inventory.index');
     Route::get('/inventory/create', [InventoryController::class, 'create'])->name('admin.inventory.create');
@@ -70,6 +71,7 @@ Route::prefix('admin')->group(function () {
     Route::put('/inventory/{inventory}', [InventoryController::class, 'update'])->name('admin.inventory.update');
     Route::delete('/inventory/{inventory}', [InventoryController::class, 'destroy'])->name('admin.inventory.destroy');
     Route::post('/inventory/{inventory}/add-stock', [InventoryController::class, 'addStock'])->name('admin.inventory.addStock');
+    Route::get('/inventory/{inventory}/purchase-history', [InventoryController::class, 'purchaseHistory'])->name('admin.inventory.purchase-history');
 
         Route::post('/purchases', [PurchaseController::class, 'store'])->name('admin.purchases.store');
 
