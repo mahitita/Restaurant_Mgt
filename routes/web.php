@@ -112,8 +112,8 @@ Route::get('/reservation', [HomeController::class, 'index'])->name('reservation'
         Route::get('/orders/confirmation/{order}', [UserOrderController::class, 'confirmation'])->name('orders.confirmation');
         Route::get('/orders/track/{order}', [UserOrderController::class, 'track'])->name('orders.track');
         Route::get('/orders/preorder', [UserOrderController::class, 'preorder'])->name('orders.preorder');
-    Route::post('/orders/preorder', [UserOrderController::class, 'storePreorder'])->name('orders.preorder.store');
-
+        Route::post('/orders/preorder', [UserOrderController::class, 'storePreorder'])->name('orders.storePreorder');
+        
         Route::get('/tables', [UserTableController::class, 'index'])->name('tables.index');
         Route::post('/tables', [UserTableController::class, 'store'])->name('tables.store');
         Route::get('/tables/available', [UserTableController::class, 'availableTables'])->name('tables.available');

@@ -1,39 +1,44 @@
 <template>
     <UserLayout>
-      <section class="container mx-auto py-8 px-4">
-        <h2 class="text-3xl font-semibold mb-6">My Reservations</h2>
-        <div v-if="reservations.length === 0" class="text-gray-500">
+      <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-6 text-gray-800">Your Reservations</h1>
+  
+        <div v-if="reservations.length === 0" class="text-center text-gray-500 text-lg">
           You have no reservations yet.
         </div>
-        <div v-else class="grid gap-6">
-          <div
-            v-for="reservation in reservations"
-            :key="reservation.id"
-            class="bg-white p-6 rounded-lg shadow-md"
-          >
-            <h3 class="text-xl font-bold mb-2">Table {{ reservation.table_number }}</h3>
-            <p><strong>Seats:</strong> {{ reservation.seats }}</p>
-            <p><strong>Reserved For:</strong> {{ reservation.reservation_time }}</p>
-            <p><strong>Status:</strong> {{ reservation.status }}</p>
-            <p><strong>Deposit Paid:</strong> ${{ reservation.deposit_amount }}</p>
+  
+        <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div v-for="reservation in reservations" :key="reservation.id" class="bg-white p-6 rounded-lg shadow-md">
+            <p class="text-lg font-semibold text-gray-800">Table {{ reservation.table_number }}</p>
+            <p class="text-gray-600">Seats: {{ reservation.seats }}</p>
+            <p class="text-gray-600">Time: {{ reservation.reservation_time }}</p>
+            <p class="text-gray-600">Status: {{ reservation.status }}</p>
+            <p class="text-gray-600">Deposit Paid: ${{ reservation.deposit_amount }}</p>
+            <button
+              v-if="reservation.status === 'confirmed'"
+              @click="goToPreOrder(reservation.id)"
+              class="mt-4 bg-orange-600 text-white px-4 py-2 rounded-full hover:bg-orange-700"
+            >
+              Pre-Order
+            </button>
           </div>
         </div>
-        <button
-          @click="$inertia.get(route('tables.index'))"
-          class="bg-blue-500 text-white px-4 py-2 mt-6 rounded"
-        >
-          Reserve More Tables
-        </button>
-      </section>
+      </div>
     </UserLayout>
   </template>
-
-  <script>
-import UserLayout from "@/Layouts/UserLayout.vue";
-  export default {
-    components: { UserLayout },
-    props: {
-      reservations: Array,
+  
+  <script setup>
+  import UserLayout from '../../Layouts/UserLayout.vue';
+  import { router } from '@inertiajs/vue3';
+  
+  defineProps({
+    reservations: {
+      type: Array,
+      default: () => [],
     },
+  });
+  
+  const goToPreOrder = (reservationId) => {
+    router.visit(route('orders.preorder', { reservation_ids: reservationId }));
   };
   </script>

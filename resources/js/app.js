@@ -5,6 +5,7 @@ import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
 import { Inertia } from '@inertiajs/inertia';
+import Toast from 'vue-toastification'
 import './bootstrap';
 import '../css/app.css';
 // Explicit import for testing
@@ -31,6 +32,7 @@ createInertiaApp({
   setup({ el, App, props, plugin }) {
     const app = createApp({ render: () => h(App, props) })
       .use(plugin)
+      .use(Toast)
       .use(ZiggyVue)
       .use(pinia);
     app.mount(el);

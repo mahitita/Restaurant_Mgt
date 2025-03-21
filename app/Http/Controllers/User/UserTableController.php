@@ -37,16 +37,16 @@ class UserTableController extends Controller
             'payment.paymentType' => 'required|in:card,bank_transfer',
             'payment.accountNumber' => 'required|string|max:255',
         ]);
-
+    
         $tables = Table::findMany($request->table_ids);
         $reservationTime = Carbon::parse($request->reservation_time);
-
+    
         foreach ($tables as $table) {
             if (!$table->isAvailable($reservationTime)) {
                 return redirect()->back()->with('error', "Table {$table->table_number} is already reserved for this date.");
             }
         }
-
+    
         return DB::transaction(function () use ($request, $tables, $reservationTime) {
             $reservations = [];
             foreach ($tables as $table) {
@@ -57,7 +57,7 @@ class UserTableController extends Controller
                     'status' => 'pending',
                 ]);
             }
-
+    
             $depositPerTable = 10.00;
             $totalDeposit = $depositPerTable * $tables->count();
             $paymentMethodMap = [
@@ -66,22 +66,22 @@ class UserTableController extends Controller
             ];
             $frontendPaymentType = $request->input('payment.paymentType');
             $backendPaymentMethod = $paymentMethodMap[$frontendPaymentType] ?? 'cash';
-
+    
             $payment = Payment::create([
-                'reservation_id' => $reservations[0]->id, // Link to first reservation
+                'reservation_id' => $reservations[0]->id,
                 'payment_method' => $backendPaymentMethod,
                 'amount' => 0,
                 'deposit_amount' => $totalDeposit,
                 'paid_at' => now(),
                 'status' => 'paid',
             ]);
-
+    
             foreach ($reservations as $reservation) {
                 $reservation->status = 'confirmed';
                 $reservation->save();
             }
-
-            return redirect()->route('tables.index')->with('success', 'Tables reserved with deposit!');
+    
+            return redirect()->route('reservations.index')->with('success', 'Tables reserved with deposit!');
         });
     }
 

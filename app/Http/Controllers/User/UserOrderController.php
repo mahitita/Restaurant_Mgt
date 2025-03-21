@@ -230,29 +230,7 @@ class UserOrderController extends Controller
         return true;
     }
 
-    public function preorder(Request $request)
-{
-    $reservationIds = explode(',', $request->query('reservation_ids'));
-    $reservations = Reservation::whereIn('id', $reservationIds)
-        ->where('user_id', Auth::id())
-        ->with('table')
-        ->get();
-
-    // if ($reservations->isEmpty()) {
-    //     abort(403, 'Invalid or unauthorized reservation.');
-    // }
-
-    return Inertia::render('Orders/Preorder', [
-        'reservations' => $reservations->map(fn($r) => [
-            'id' => $r->id,
-            'table_number' => $r->table->table_number,
-            'reservation_time' => $r->reservation_time->toDateTimeString(),
-        ]),
-        'menuItems' => Menu::all(), // Assume a Menu model exists
-    ]);
-}
-
-public function storePreorder(Request $request)
+    public function storePreorder(Request $request)
     {
         $request->validate([
             'reservation_ids' => 'required|array|min:1',
@@ -261,10 +239,13 @@ public function storePreorder(Request $request)
             'cart.*.id' => 'required|exists:menus,id',
             'cart.*.quantity' => 'required|integer|min:1',
             'cart.*.price' => 'required|numeric|min:0',
+            'payment.paymentType' => 'required|in:card,bank_transfer,cash',
+            'payment.accountNumber' => 'required_if:payment.paymentType,!=,cash|string|max:255',
         ]);
 
         $reservations = Reservation::whereIn('id', $request->reservation_ids)
             ->where('user_id', Auth::id())
+            ->where('status', 'confirmed')
             ->get();
 
         if ($reservations->isEmpty()) {
@@ -273,7 +254,7 @@ public function storePreorder(Request $request)
 
         return DB::transaction(function () use ($request, $reservations) {
             $totalPrice = collect($request->cart)->sum(fn($item) => $item['price'] * $item['quantity']);
-            $cartItems = collect($request->cart)->map(fn($item) => Menu::find($item['id']));
+            $cartItems = collect($request->cart); // Raw cart data with id, quantity, price
             $prepTime = $this->calculatePrepTime($cartItems, $reservations->first()->reservation_time);
             $isPeakHour = $this->isPeakHour(now());
             $isPriority = $this->determinePriority($cartItems, $totalPrice, $isPeakHour);
@@ -302,10 +283,93 @@ public function storePreorder(Request $request)
                 $reservation->save();
             }
 
+            $paymentMethodMap = [
+                'card' => 'cbe_birr',
+                'bank_transfer' => 'amole',
+                'cash' => 'cash',
+            ];
+            $frontendPaymentType = $request->input('payment.paymentType');
+            $backendPaymentMethod = $paymentMethodMap[$frontendPaymentType] ?? 'cash';
+
+            Payment::create([
+                'order_id' => $order->id,
+                'payment_method' => $backendPaymentMethod,
+                'amount' => $totalPrice,
+                'deposit_amount' => 0,
+                'paid_at' => $frontendPaymentType === 'cash' ? null : now(),
+                'status' => $frontendPaymentType === 'cash' ? 'pending' : 'paid',
+            ]);
+
             return redirect()->route('orders.track', $order->id)
                 ->with('success', 'Pre-order placed! Estimated wait: ' . $prepTime . ' minutes.');
         });
     }
+
+    private function calculatePrepTime($items, $reservationTime = null)
+    {
+        $baseTime = 5; // Adjusted base time
+
+        // $items is a collection of cart items (not OrderItems), so use 'quantity' directly
+        $itemPrepTime = $items->sum(function ($item) {
+            $menu = Menu::find($item['id']);
+            return ($menu->prep_time ?? 5) * $item['quantity'];
+        });
+
+        // Kitchen load: average completion time of recent orders
+        $recentOrders = Order::where('status', 'completed')
+            ->where('updated_at', '>=', now()->subHour())
+            ->get();
+
+        $kitchenLoadFactor = $recentOrders->count() > 5 ? 1.2 : 1.0; // 20% increase if busy
+
+        return round(($baseTime + $itemPrepTime) * $kitchenLoadFactor);
+    }
+
+    private function isPeakHour($time)
+    {
+        $hour = $time->hour;
+        return ($hour >= 12 && $hour <= 14) || ($hour >= 18 && $hour <= 20);
+    }
+
+    private function determinePriority($items, $totalPrice, $isPeakHour)
+    {
+        $itemCount = $items->sum('quantity');
+        return $isPeakHour && ($totalPrice > 50 || $itemCount > 5);
+    }
+
+    // Assuming these methods exist from earlier context
+    public function preorder(Request $request)
+    {
+        $reservationIds = is_array($request->query('reservation_ids')) 
+            ? $request->query('reservation_ids') 
+            : explode(',', $request->query('reservation_ids'));
+        $reservations = Reservation::whereIn('id', $reservationIds)
+            ->where('user_id', Auth::id())
+            ->where('status', 'confirmed')
+            ->with('table')
+            ->get();
+
+        if ($reservations->isEmpty()) {
+            abort(403, 'Invalid or unauthorized reservation.');
+        }
+
+        $menuItems = Menu::where('available', true)->get()->map(fn($item) => [
+            'id' => $item->id,
+            'name' => $item->name,
+            'price' => $item->price,
+            'image' => $item->image,
+        ]);
+
+        return Inertia::render('Orders/Preorder', [
+            'reservations' => $reservations->map(fn($r) => [
+                'id' => $r->id,
+                'table_number' => $r->table->table_number,
+                'reservation_time' => $r->reservation_time->toDateTimeString(),
+            ]),
+            'menuItems' => $menuItems,
+        ]);
+    }
+
 
     public function track($orderId)
     {
@@ -329,56 +393,56 @@ public function storePreorder(Request $request)
         ]);
     }
 
-    private function calculatePrepTime($items, $reservationTime = null)
-    {
-        $baseTime = 5; // Adjusted base time
-        $itemPrepTime = $items->sum(fn($item) => ($item->prep_time ?? 5) * $item->pivot->quantity);
+    // private function calculatePrepTime($items, $reservationTime = null)
+    // {
+    //     $baseTime = 5; // Adjusted base time
+    //     $itemPrepTime = $items->sum(fn($item) => ($item->prep_time ?? 5) * $item->pivot->quantity);
 
-        // Kitchen load: average completion time of recent orders
-        $recentOrders = Order::where('status', 'completed')
-            ->where('updated_at', '>=', now()->subHour())
-            ->get();
-        $avgCompletionTime = $recentOrders->count() > 0
-            ? $recentOrders->avg(fn($o) => $o->updated_at->diffInMinutes($o->created_at))
-            : 10;
+    //     // Kitchen load: average completion time of recent orders
+    //     $recentOrders = Order::where('status', 'completed')
+    //         ->where('updated_at', '>=', now()->subHour())
+    //         ->get();
+    //     $avgCompletionTime = $recentOrders->count() > 0
+    //         ? $recentOrders->avg(fn($o) => $o->updated_at->diffInMinutes($o->created_at))
+    //         : 10;
 
-        $activeOrders = Order::whereIn('status', ['received', 'preparing'])->count();
-        $kitchenLoad = $activeOrders * ($avgCompletionTime / 2); // Half impact per order
+    //     $activeOrders = Order::whereIn('status', ['received', 'preparing'])->count();
+    //     $kitchenLoad = $activeOrders * ($avgCompletionTime / 2); // Half impact per order
 
-        // Table wait (for dine-in without reservation or if reservation is later)
-        $tableWait = 0;
-        if ($reservationTime) {
-            $timeToReservation = max(0, now()->diffInMinutes($reservationTime));
-            $availableTables = Table::where('status', 'available')->count();
-            if ($availableTables === 0 && $timeToReservation > 0) {
-                $occupiedTables = Table::where('status', 'occupied')->get();
-                $tableWait = $occupiedTables->count() > 0
-                    ? $occupiedTables->avg(fn($t) => now()->diffInMinutes($t->updated_at)) / 2
-                    : 15; // Default 15 min if no data
-            }
-        }
+    //     // Table wait (for dine-in without reservation or if reservation is later)
+    //     $tableWait = 0;
+    //     if ($reservationTime) {
+    //         $timeToReservation = max(0, now()->diffInMinutes($reservationTime));
+    //         $availableTables = Table::where('status', 'available')->count();
+    //         if ($availableTables === 0 && $timeToReservation > 0) {
+    //             $occupiedTables = Table::where('status', 'occupied')->get();
+    //             $tableWait = $occupiedTables->count() > 0
+    //                 ? $occupiedTables->avg(fn($t) => now()->diffInMinutes($t->updated_at)) / 2
+    //                 : 15; // Default 15 min if no data
+    //         }
+    //     }
 
-        return round($baseTime + $itemPrepTime + $kitchenLoad + $tableWait);
-    }
+    //     return round($baseTime + $itemPrepTime + $kitchenLoad + $tableWait);
+    // }
 
-    private function isPeakHour($time)
-    {
-        $hour = $time->hour;
-        return ($hour >= 12 && $hour < 14) || ($hour >= 18 && $hour < 20); // 12-2 PM, 6-8 PM
-    }
+//     private function isPeakHour($time)
+//     {
+//         $hour = $time->hour;
+//         return ($hour >= 12 && $hour < 14) || ($hour >= 18 && $hour < 20); // 12-2 PM, 6-8 PM
+//     }
 
-    private function determinePriority($items, $totalPrice, $isPeakHour)
-{
-    $prepTime = $items->sum(fn($item) => ($item->prep_time ?? 5) * $item->pivot->quantity);
-    $orderSize = $items->sum('pivot.quantity');
-    $userOrderCount = Order::where('user_id', Auth::id())->count();
+//     private function determinePriority($items, $totalPrice, $isPeakHour)
+// {
+//     $prepTime = $items->sum(fn($item) => ($item->prep_time ?? 5) * $item->pivot->quantity);
+//     $orderSize = $items->sum('pivot.quantity');
+//     $userOrderCount = Order::where('user_id', Auth::id())->count();
 
-    $isQuick = $prepTime < 15; // Quick prep
-    $isHighValue = $totalPrice > 50; // High value
-    $isLarge = $orderSize > 5; // Large order
-    $isLoyal = $userOrderCount > 10; // Loyal customer
+//     $isQuick = $prepTime < 15; // Quick prep
+//     $isHighValue = $totalPrice > 50; // High value
+//     $isLarge = $orderSize > 5; // Large order
+//     $isLoyal = $userOrderCount > 10; // Loyal customer
 
-    return $isPeakHour && ($isQuick || $isHighValue || ($isLarge && $isLoyal));
-}
+//     return $isPeakHour && ($isQuick || $isHighValue || ($isLarge && $isLoyal));
+// }
 
 }
