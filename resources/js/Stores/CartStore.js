@@ -1,6 +1,6 @@
-import { defineStore } from "pinia";
+import { defineStore } from 'pinia';
 
-export const useCartStore = defineStore("cart", {
+export const useCartStore = defineStore('cart', {
   state: () => ({
     cartItems: [],
   }),
@@ -12,19 +12,20 @@ export const useCartStore = defineStore("cart", {
       } else {
         this.cartItems.push({ ...menuItem, quantity: 1 });
       }
-      console.log("Cart after adding:", this.cartItems);
+      console.log('Cart after adding:', this.cartItems);
     },
     removeFromCart(menuId) {
       this.cartItems = this.cartItems.filter(item => item.id !== menuId);
     },
     updateQuantity(menuId, quantity) {
-        const item = this.cartItems.find(item => item.id === menuId);
-        if (item) {
-          item.quantity = quantity;
-        }
-      },
+      const item = this.cartItems.find(item => item.id === menuId);
+      if (item) {
+        item.quantity = quantity;
+      }
+    },
     clearCart() {
       this.cartItems = [];
+      console.log('Cart cleared:', this.cartItems); // Debug log
     },
   },
   getters: {
@@ -35,5 +36,5 @@ export const useCartStore = defineStore("cart", {
       return state.cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
     },
   },
-  persist: true, // This line tells the plugin to persist this store
+  persist: true, // Persist the store state
 });

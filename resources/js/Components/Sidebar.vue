@@ -63,13 +63,15 @@
 
       const navItems = [
         { name: 'Dashboard', route: 'admin.dashboard', icon: '🏠' },
-        { name: 'Categories', route: 'admin.categories', icon: '📦' },
-        { name: 'Orders', route: 'admin.orders.index', icon: '📝' },
+        { name: 'Categories', route: 'admin.categories', icon: '📂' },
+        { name: 'Orders', route: 'admin.orders.index', icon: '🛎️' },
         { name: 'Menus', route: 'admin.menus', icon: '🍽️' },
         { name: 'Tables', route: 'admin.tables.index', icon: '🪑' },
-        { name: 'Reservations', route: 'admin.reservations.index', icon: '🛎️' },
-        { name: 'Inventory', route: 'admin.inventory.index', icon: '📊' },
+        { name: 'Reservations', route: 'admin.reservations.index', icon: '📝' },
+        { name: 'Inventory', route: 'admin.inventory.index', icon: '📦📊' },
         { name: 'Profit Report', route: 'admin.menus.profit-report', icon: '📈' },
+        { name: 'Users', route: 'admin.menus.profit-report', icon: '👥 ' },
+
 
 
 

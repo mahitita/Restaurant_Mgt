@@ -5,6 +5,8 @@
         <div v-if="success" class="bg-green-100 text-green-700 p-4 rounded mb-6">
           {{ success }}
         </div>
+
+        <!-- Order Details -->
         <div class="bg-white p-6 rounded-lg shadow-md">
           <h3 class="text-xl font-bold mb-4">Order Details</h3>
           <p><strong>Order ID:</strong> {{ order.id }}</p>
@@ -20,23 +22,28 @@
             </li>
           </ul>
         </div>
+
+        <!-- Payment Details -->
         <div class="bg-white p-6 rounded-lg shadow-md mt-6">
           <h3 class="text-xl font-bold mb-4">Payment Details</h3>
           <p><strong>Method:</strong> {{ payment.payment_method }}</p>
           <p><strong>Amount:</strong> ${{ payment.amount }}</p>
-          <p><strong>Deposit Paid:</strong> ${{ payment.deposit_amount || 0 }}</p>
+          <p><strong>Deposit Paid:</strong> ${{ payment.deposit_amount }}</p>
           <p><strong>Deposit Refunded:</strong> {{ payment.deposit_refunded ? 'Yes' : 'No' }}</p>
           <p><strong>Paid At:</strong> {{ payment.paid_at }}</p>
           <p><strong>Status:</strong> {{ payment.status }}</p>
         </div>
-        <div v-if="reservations.length" class="bg-white p-6 rounded-lg shadow-md mt-6">
+
+        <!-- Reservation Details -->
+        <div v-if="reservations && reservations.length" class="bg-white p-6 rounded-lg shadow-md mt-6">
           <h3 class="text-xl font-bold mb-4">Reservation Details</h3>
           <p><strong>Tables:</strong> {{ reservations.map(r => r.table_id).join(', ') }}</p>
           <p><strong>Time:</strong> {{ reservations[0].reservation_time }}</p>
         </div>
+
         <button
           @click="$inertia.get(route('orders.index'))"
-          class="bg-blue-500 text-white px-4 py-2 mt-6 rounded"
+          class="bg-blue-500 text-white px-4 py-2 mt-6 rounded hover:bg-blue-600"
         >
           View All Orders
         </button>
@@ -50,10 +57,22 @@
   export default {
     components: { UserLayout },
     props: {
-      order: Object,
-      payment: Object,
-      reservations: Array,
-      success: String,
+      order: {
+        type: Object,
+        required: true,
+      },
+      payment: {
+        type: Object,
+        required: true,
+      },
+      reservations: {
+        type: Array,
+        default: () => [], // Default to empty array if undefined
+      },
+      success: {
+        type: String,
+        default: null,
+      },
     },
   };
   </script>

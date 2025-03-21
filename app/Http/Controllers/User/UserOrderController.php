@@ -20,8 +20,15 @@ use Illuminate\Support\Facades\Auth;
 
 class UserOrderController extends Controller
 {
+    public function cart()
+    {
+        return Inertia::render('Cart');
+    }
+
     public function store(Request $request)
     {
+        Log::info('Order store request received:', $request->all());
+
         $request->validate([
             'cart' => 'required|array|min:1',
             'cart.*.id' => 'required|exists:menus,id',
@@ -35,83 +42,103 @@ class UserOrderController extends Controller
             'payment.accountNumber' => 'required_unless:payment.paymentType,cash|string|max:255',
         ]);
 
-        return DB::transaction(function () use ($request) {
-            $totalPrice = collect($request->cart)->sum(fn($item) => $item['price'] * $item['quantity']);
+        try {
+            return DB::transaction(function () use ($request) {
+                $totalPrice = collect($request->cart)->sum(fn($item) => $item['price'] * $item['quantity']);
+                Log::info('Calculated total price:', ['total_price' => $totalPrice]);
 
-            $order = Order::create([
-                'user_id' => Auth::id(),
-                'order_type' => $request->order_type,
-                'status' => 'pending',
-                'total_price' => $totalPrice,
-                'table_id' => $request->table_id,
-                'pickup_time' => $request->pickup_time,
-                'delivery_address' => $request->delivery_address,
-            ]);
-
-            foreach ($request->cart as $item) {
-                OrderItem::create([
-                    'order_id' => $order->id,
-                    'menu_id' => $item['id'],
-                    'quantity' => $item['quantity'],
-                    'price' => $item['price'],
+                $order = Order::create([
+                    'user_id' => Auth::id(),
+                    'order_type' => $request->order_type,
+                    'status' => 'pending',
+                    'total_price' => $totalPrice,
+                    'table_id' => $request->table_id,
+                    'pickup_time' => $request->pickup_time,
+                    'delivery_address' => $request->delivery_address,
                 ]);
-                $this->deductInventory($item['id'], $item['quantity']);
-            }
+                Log::info('Order created:', ['order_id' => $order->id]);
 
-            $reservation = Reservation::where('user_id', Auth::id())
-                ->where('status', 'confirmed')
-                ->whereDate('reservation_time', now()->toDateString())
-                ->first();
-
-            $paymentMethodMap = [
-                'card' => 'cbe_birr',
-                'bank_transfer' => 'amole',
-                'cash' => 'cash',
-            ];
-            $frontendPaymentType = $request->input('payment.paymentType');
-            $backendPaymentMethod = $paymentMethodMap[$frontendPaymentType] ?? 'cash';
-
-            if ($reservation) {
-                $reservationPayment = $reservation->payment;
-                if ($frontendPaymentType === 'cash') {
-                    $reservationPayment->update([
-                        'amount' => $totalPrice,
-                        'deposit_refunded' => true,
+                foreach ($request->cart as $item) {
+                    OrderItem::create([
+                        'order_id' => $order->id,
+                        'menu_id' => $item['id'],
+                        'quantity' => $item['quantity'],
+                        'price' => $item['price'],
                     ]);
-                    $reservation->table->status = 'occupied';
-                    $reservation->table->save();
-                } else {
-                    $depositUsed = min($totalPrice, $reservationPayment->deposit_amount);
-                    $remainingAmount = max(0, $totalPrice - $reservationPayment->deposit_amount);
-
-                    $reservationPayment->update([
-                        'amount' => $totalPrice,
-                        'deposit_amount' => $depositUsed,
-                        'payment_method' => $backendPaymentMethod,
-                        'paid_at' => now(),
-                    ]);
-
-                    if ($remainingAmount > 0) {
-                        Log::info("Additional payment needed: {$remainingAmount}");
-                        // Future: Charge remaining amount via gateway
-                    }
-
-                    $reservation->table->status = 'occupied';
-                    $reservation->table->save();
+                    Log::info('Order item created:', ['menu_id' => $item['id'], 'quantity' => $item['quantity']]);
                 }
-            } else {
-                Payment::create([
-                    'order_id' => $order->id,
-                    'payment_method' => $backendPaymentMethod,
-                    'amount' => $totalPrice,
-                    'deposit_amount' => 0,
-                    'paid_at' => now(),
-                    'status' => 'paid',
-                ]);
-            }
 
-            return redirect()->route('orders.confirmation', ['order' => $order->id]);
-        });
+                $reservation = Reservation::where('user_id', Auth::id())
+                    ->where('status', 'confirmed')
+                    ->whereDate('reservation_time', now()->toDateString())
+                    ->first();
+
+                $paymentMethodMap = [
+                    'card' => 'cbe_birr',
+                    'bank_transfer' => 'amole',
+                    'cash' => 'cash',
+                ];
+                $frontendPaymentType = $request->input('payment.paymentType');
+                $backendPaymentMethod = $paymentMethodMap[$frontendPaymentType] ?? 'cash';
+
+                if ($reservation) {
+                    $reservationPayment = $reservation->payment ?? Payment::create([
+                        'reservation_id' => $reservation->id,
+                        'payment_method' => $backendPaymentMethod,
+                        'amount' => 0,
+                        'deposit_amount' => 0,
+                        'paid_at' => now(),
+                        'status' => 'pending',
+                    ]);
+
+                    if ($frontendPaymentType === 'cash') {
+                        $reservationPayment->update([
+                            'amount' => $totalPrice,
+                            'status' => 'paid',
+                            'deposit_refunded' => true,
+                        ]);
+                        $reservation->table->status = 'occupied';
+                        $reservation->table->save();
+                        Log::info('Cash payment processed for reservation:', ['reservation_id' => $reservation->id]);
+                    } else {
+                        $depositUsed = min($totalPrice, $reservationPayment->deposit_amount ?? 0);
+                        $remainingAmount = max(0, $totalPrice - ($reservationPayment->deposit_amount ?? 0));
+
+                        $reservationPayment->update([
+                            'amount' => $totalPrice,
+                            'deposit_amount' => $depositUsed,
+                            'payment_method' => $backendPaymentMethod,
+                            'paid_at' => now(),
+                            'status' => 'paid',
+                        ]);
+
+                        if ($remainingAmount > 0) {
+                            Log::info("Additional payment needed: {$remainingAmount}");
+                        }
+
+                        $reservation->table->status = 'occupied';
+                        $reservation->table->save();
+                        Log::info('Non-cash payment processed for reservation:', ['reservation_id' => $reservation->id]);
+                    }
+                } else {
+                    Payment::create([
+                        'order_id' => $order->id,
+                        'payment_method' => $backendPaymentMethod,
+                        'amount' => $totalPrice,
+                        'deposit_amount' => 0,
+                        'paid_at' => now(),
+                        'status' => 'paid',
+                    ]);
+                    Log::info('Payment created for order:', ['order_id' => $order->id]);
+                }
+
+                return redirect()->route('orders.confirmation', ['order' => $order->id])
+                    ->with('success', 'Order placed successfully!');
+            });
+        } catch (\Exception $e) {
+            Log::error('Order store failed:', ['error' => $e->getMessage()]);
+            throw $e; // Re-throw to rollback transaction and trigger error response
+        }
     }
 
     public function confirmation($orderId)
@@ -125,14 +152,41 @@ class UserOrderController extends Controller
             ->orWhereHas('reservation', fn($query) => $query->where('table_id', $order->table_id))
             ->firstOrFail();
 
-        $reservation = Reservation::where('user_id', Auth::id())
+        // Ensure reservations is always an array, even if empty
+        $reservations = Reservation::where('user_id', Auth::id())
             ->whereDate('reservation_time', now()->toDateString())
-            ->get();
+            ->get()
+            ->map(fn($reservation) => [
+                'id' => $reservation->id,
+                'table_id' => $reservation->table_id,
+                'reservation_time' => $reservation->reservation_time->toDateTimeString(),
+            ])
+            ->all(); // Convert Collection to array
 
         return inertia('OrderConfirmation', [
-            'order' => $order,
-            'payment' => $payment,
-            'reservation' => $reservation,
+            'order' => [
+                'id' => $order->id,
+                'order_type' => $order->order_type,
+                'total_price' => $order->total_price,
+                'table_id' => $order->table_id,
+                'pickup_time' => $order->pickup_time,
+                'delivery_address' => $order->delivery_address,
+                'order_items' => $order->orderItems->map(fn($item) => [
+                    'id' => $item->id,
+                    'menu_id' => $item->menu_id,
+                    'quantity' => $item->quantity,
+                    'price' => $item->price,
+                ]),
+            ],
+            'payment' => [
+                'payment_method' => $payment->payment_method,
+                'amount' => $payment->amount,
+                'deposit_amount' => $payment->deposit_amount ?? 0,
+                'deposit_refunded' => $payment->deposit_refunded ?? false,
+                'paid_at' => $payment->paid_at,
+                'status' => $payment->status,
+            ],
+            'reservations' => $reservations, // Always an array
             'success' => 'Order and payment processed successfully!',
         ]);
     }

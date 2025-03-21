@@ -82,13 +82,13 @@ Route::prefix('admin')->group(function () {
         Route::get('/reservations/{reservation}/edit', [ReservationController::class, 'edit'])->name('admin.reservations.edit');
         Route::put('/reservations/{reservation}', [ReservationController::class, 'update'])->name('admin.reservations.update');
         Route::delete('/reservations/{reservation}', [ReservationController::class, 'destroy'])->name('admin.reservations.destroy');
-        
-                    Route::get('/users', [UserController::class, 'index'])->name('admin.users.index');
-                    Route::get('/users/create', [UserController::class, 'create'])->name('admin.users.create');
-                    Route::post('/users', [UserController::class, 'store'])->name('admin.users.store');
-                    Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('admin.users.edit');
-                    Route::put('/users/{user}', [UserController::class, 'update'])->name('admin.users.update');
-                    Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('admin.users.destroy');
+
+    Route::get('/users', [UserController::class, 'index'])->name('admin.users.index');
+    Route::get('/users/create', [UserController::class, 'create'])->name('admin.users.create');
+    Route::post('/users', [UserController::class, 'store'])->name('admin.users.store');
+    Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('admin.users.edit');
+    Route::put('/users/{user}', [UserController::class, 'update'])->name('admin.users.update');
+    Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('admin.users.destroy');
 
                     Route::get('/tables', [TableController::class, 'index'])->name('admin.tables.index');
                     Route::get('/tables/create', [TableController::class, 'create'])->name('admin.tables.create');

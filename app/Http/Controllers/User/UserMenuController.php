@@ -12,19 +12,21 @@ class UserMenuController extends Controller
 {
     public function index()
     {
-        $menus = Menu::with('category')->get()->map(function ($menu) {
-            return [
-                'id' => $menu->id,
-                'name' => $menu->name,
-                'price' => $menu->price,
-                'prep_time' => $menu->prep_time ?? 5,
-                'stock_quantity' => $menu->stock_quantity,
-                'cost' => $menu->cost ?? 0,
-                'image' => $menu->image ?? '/images/default-menu.jpg', // Default image
-                'description' => $menu->description ?? 'A delicious dish!',
-                'category_id' => $menu->category_id,
-            ];
-        });
+        $menus = Menu::with('category')
+            ->where('available', true)
+            ->get()
+            ->map(function ($menu) {
+                return [
+                    'id' => $menu->id,
+                    'name' => $menu->name,
+                    'price' => $menu->price,
+                    'category_id' => $menu->category_id,
+                    'category_name' => $menu->category->name,
+                    'description' => $menu->description ?? 'A delicious dish!',
+                    'image' => $menu->image ? asset('storage/' . $menu->image) : '/images/default-menu.jpg',
+                    'prep_time' => $menu->prep_time,
+                ];
+            });
 
         $categories = Category::all()->map(function ($category) {
             return [

@@ -28,4 +28,9 @@ class User extends Authenticatable
     {
         return $this->hasOne(Queue::class);
     }
+
+    public function isAdmin()
+    {
+        return in_array($this->role, ['manager']); 
+    }
 }

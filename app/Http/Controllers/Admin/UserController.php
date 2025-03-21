@@ -5,35 +5,48 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
     public function index()
     {
-        $users = User::latest()->get();
-        return inertia('Admin/User/Index', ['users' => $users]);
+        $users = User::all()->map(function ($user) {
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'role' => $user->role,
+                'created_at' => $user->created_at->toDateTimeString(),
+            ];
+        });
+
+        return Inertia::render('Admin/Users/Index', ['users' => $users]);
     }
 
     public function create()
     {
-        return inertia('Admin/User/Create');
+        return Inertia::render('Admin/Users/Create');
     }
 
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:6|confirmed',
-            'role' => 'required|in:admin,user',
+            'email' => 'nullable|email|unique:users,email',
+            'phone' => 'required|string|unique:users,phone|max:15',
+            'password' => 'required|string|min:8',
+            'role' => 'required|in:customer,manager,waiter,cheaf,cashier',
         ]);
 
         User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => $request->role,
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'],
+            'password' => Hash::make($validated['password']),
+            'role' => $validated['role'],
         ]);
 
         return redirect()->route('admin.users.index')->with('success', 'User created successfully.');
@@ -41,28 +54,48 @@ class UserController extends Controller
 
     public function edit(User $user)
     {
-        return inertia('Admin/User/Edit', ['user' => $user]);
+        return Inertia::render('Admin/Users/Edit', [
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'role' => $user->role,
+            ],
+        ]);
     }
 
     public function update(Request $request, User $user)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $user->id,
-            'role' => 'required|in:admin,user',
+            'email' => 'nullable|email|unique:users,email,' . $user->id,
+            'phone' => 'required|string|unique:users,phone,' . $user->id . '|max:15',
+            'role' => 'required|in:customer,manager,waiter,cheaf,cashier',
+            'password' => 'nullable|string|min:8',
         ]);
 
         $user->update([
-            'name' => $request->name,
-            'email' => $request->email,
-            'role' => $request->role,
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'],
+            'role' => $validated['role'],
         ]);
+
+        if ($validated['password']) {
+            $user->password = Hash::make($validated['password']);
+            $user->save();
+        }
 
         return redirect()->route('admin.users.index')->with('success', 'User updated successfully.');
     }
 
     public function destroy(User $user)
     {
+        if ($user->role === 'manager') {
+            return redirect()->back()->with('error', 'Cannot delete a manager.');
+        }
+
         $user->delete();
         return redirect()->route('admin.users.index')->with('success', 'User deleted successfully.');
     }
