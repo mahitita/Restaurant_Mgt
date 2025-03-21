@@ -1,22 +1,22 @@
 <template>
     <UserLayout>
       <div class="container mx-auto px-4 py-8">
-        <h1 class="text-3xl font-bold mb-6 text-gray-800">Reserve Tables</h1>
+        <h1 class="text-4xl font-bold mb-8 text-gursha-primary">Reserve a Table at Gursha</h1>
   
         <!-- Date/Time Picker -->
-        <div class="mb-6">
-          <label for="reservationTime" class="block font-semibold mb-2 text-gray-800">Select Date and Time:</label>
+        <div class="mb-8">
+          <label for="reservationTime" class="block font-semibold mb-2 text-gray-800 text-lg">Select Date and Time:</label>
           <input
             type="datetime-local"
             v-model="reservationTime"
             @change="fetchAvailableTables"
-            class="border p-2 rounded w-full md:w-1/3 shadow-sm focus:ring-orange-500 focus:border-orange-500"
+            class="border p-3 rounded-lg w-full md:w-1/3 shadow-md focus:ring-gursha-primary focus:border-gursha-primary text-gray-700"
             :min="minDateTime"
           />
         </div>
   
         <!-- Table Map -->
-        <svg viewBox="0 0 1000 600" class="w-full h-auto border rounded-lg shadow-lg bg-gray-50">
+        <svg viewBox="0 0 1000 600" class="w-full h-auto border rounded-lg shadow-xl bg-gray-50 mb-8">
           <g v-for="table in tables" :key="table.id" @click="toggleTable(table)" style="cursor: pointer">
             <!-- Table Shapes -->
             <rect
@@ -81,7 +81,6 @@
               stroke="black"
               stroke-width="1"
             />
-            <!-- Chair Labels -->
             <text
               v-for="chair in getChairs(table)"
               :key="chair.id + '-label'"
@@ -96,25 +95,63 @@
           </g>
         </svg>
   
+        <!-- Waitlist Option -->
+        <div class="mt-6 p-6 bg-gursha-light border border-gursha-accent rounded-lg shadow-md">
+          <p v-if="preferredTableId && !tables.find(t => t.id === preferredTableId)?.available" class="text-xl font-semibold text-gursha-secondary">
+            Table {{ tables.find(t => t.id === preferredTableId)?.table_number }} is not available
+          </p>
+          <p v-else-if="!tables.some(t => t.available)" class="text-xl font-semibold text-gursha-secondary">
+            No tables available for {{ reservationTime }}
+          </p>
+          <p v-else class="text-lg text-gray-700">Want a specific table? Join the waitlist!</p>
+          <div class="mt-4">
+            <label class="block text-gray-700 font-medium mb-2">Party Size:</label>
+            <input
+              type="number"
+              v-model="partySize"
+              min="1"
+              class="border p-2 rounded w-24 shadow-sm focus:ring-gursha-primary focus:border-gursha-primary"
+            />
+          </div>
+          <div class="mt-4">
+            <label class="block text-gray-700 font-medium mb-2">Preferred Table (Optional):</label>
+            <select
+              v-model="preferredTableId"
+              class="border p-2 rounded w-full md:w-1/3 shadow-sm focus:ring-gursha-primary focus:border-gursha-primary"
+            >
+              <option :value="null">Any Table</option>
+              <option v-for="table in tables" :key="table.id" :value="table.id">
+                {{ table.table_number }} ({{ table.seats }} seats)
+              </option>
+            </select>
+          </div>
+          <button
+            @click="joinWaitlist"
+            class="mt-6 bg-gursha-primary text-white px-6 py-3 rounded-full hover:bg-gursha-accent hover:shadow-lg transform hover:scale-105 transition-all duration-300"
+          >
+            Join Waitlist
+          </button>
+        </div>
+  
         <!-- Selected Tables and Payment -->
         <div v-if="selectedTables.length" class="mt-6 p-6 bg-green-100 border border-green-400 rounded-lg shadow-md">
-          <p class="text-lg font-semibold text-gray-800">
+          <p class="text-xl font-semibold text-gray-800">
             Selected Tables: {{ selectedTables.map(id => tables.find(t => t.id === id).table_number).join(', ') }}
           </p>
           <p class="text-gray-700">Total Seats: {{ totalSeats }}</p>
           <p class="text-gray-700">Deposit: ${{ selectedTables.length * 10 }} (refunded if you pay cash on-site)</p>
-          <select v-model="paymentType" class="border p-2 rounded w-full mt-4 shadow-sm focus:ring-orange-500">
+          <select v-model="paymentType" class="border p-2 rounded w-full mt-4 shadow-sm focus:ring-gursha-primary">
             <option value="card">Card</option>
             <option value="bank_transfer">Bank Transfer</option>
           </select>
           <input
             v-model="accountNumber"
             placeholder="Account Number"
-            class="border p-2 rounded w-full mt-4 shadow-sm focus:ring-orange-500"
+            class="border p-2 rounded w-full mt-4 shadow-sm focus:ring-gursha-primary"
           />
           <button
             @click="reserveTables"
-            class="mt-4 bg-orange-600 text-white px-6 py-2 rounded-full hover:bg-orange-700 disabled:bg-gray-400"
+            class="mt-4 bg-gursha-primary text-white px-6 py-3 rounded-full hover:bg-gursha-accent hover:shadow-lg transform hover:scale-105 transition-all duration-300"
             :disabled="isReserving || !accountNumber"
           >
             {{ isReserving ? 'Reserving...' : 'Reserve with Deposit' }}
@@ -138,13 +175,14 @@
   const accountNumber = ref('');
   const isReserving = ref(false);
   const minDateTime = new Date().toISOString().slice(0, 16);
+  const partySize = ref(1);
+  const preferredTableId = ref(null);
   
   const totalSeats = computed(() =>
     selectedTables.value.reduce((sum, id) => sum + tables.value.find(t => t.id === id).seats, 0)
   );
   
   onMounted(() => {
-    console.log('Initial Tables:', tables.value);
     fetchAvailableTables();
   });
   
@@ -158,7 +196,7 @@
   
   const toggleTable = (table) => {
     if (!table.available) {
-      alert('This table is not available on the selected date!');
+      preferredTableId.value = table.id; // Set as preferred if unavailable
       return;
     }
     const index = selectedTables.value.indexOf(table.id);
@@ -183,10 +221,27 @@
       preserveState: false,
       onSuccess: () => {
         selectedTables.value = [];
-        router.visit(route('reservations.index')); // Redirect to reservations page
+        router.visit(route('reservations.index'));
       },
       onError: (errors) => alert('Reservation failed: ' + JSON.stringify(errors)),
       onFinish: () => (isReserving.value = false),
+    });
+  };
+  
+  const joinWaitlist = () => {
+    if (partySize.value < 1) {
+      alert('Party size must be at least 1.');
+      return;
+    }
+    router.post(route('waitlists.store'), {
+      party_size: partySize.value,
+      reservation_time: reservationTime.value,
+      preferred_table_id: preferredTableId.value,
+    }, {
+      onSuccess: () => {
+        router.visit(route('reservations.index'));
+      },
+      onError: (errors) => alert('Failed to join waitlist: ' + JSON.stringify(errors)),
     });
   };
   
@@ -236,14 +291,10 @@
     max-width: 1000px;
     max-height: 600px;
   }
-  rect,
-  circle,
-  ellipse {
+  rect, circle, ellipse {
     transition: fill 0.3s ease;
   }
-  rect:hover,
-  circle:hover,
-  ellipse:hover {
+  rect:hover, circle:hover, ellipse:hover {
     fill: #87CEFA;
   }
   </style>

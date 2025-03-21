@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
-use App\Models\Reservation;
-use App\Models\Table;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Carbon\Carbon;
+use Inertia\Inertia;
+use App\Models\Table;
+use App\Models\Waitlist;
+use App\Models\Reservation;
+use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 
 class ReservationController extends Controller
 {
@@ -106,4 +107,19 @@ class ReservationController extends Controller
         $table->status = $hasConfirmedReservation ? 'reserved' : 'available';
         $table->save();
     }
+
+    public function updateWaitlistStatus(Request $request, Waitlist $waitlist)
+{
+    $request->validate([
+        'status' => 'required|in:waiting,seated,cancelled',
+    ]);
+
+    $waitlist->update(['status' => $request->status]);
+    if ($request->status === 'seated') {
+        $waitlist->update(['notified_at' => now()]);
+        // TODO: Trigger notification (e.g., email, SMS, or frontend update)
+    }
+
+    return redirect()->back()->with('success', 'Waitlist status updated.');
+}
 }

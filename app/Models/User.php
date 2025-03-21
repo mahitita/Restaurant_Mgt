@@ -24,9 +24,9 @@ class User extends Authenticatable
         return $this->hasMany(Reservation::class);
     }
 
-    public function queue()
+    public function waitlists()
     {
-        return $this->hasOne(Queue::class);
+        return $this->hasMany(Waitlist::class);
     }
 
     public function isAdmin()

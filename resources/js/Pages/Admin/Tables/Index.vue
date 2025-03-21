@@ -14,9 +14,7 @@
   <button @click="goToCreate" class="bg-blue-500 text-white p-2 rounded">
     Add New Table
   </button>
-  <button @click="goToReservations" class="bg-purple-500 text-white p-2 rounded">
-    Manage Reservations
-  </button>
+  <button @click="goToWaitlists" class="bg-blue-500 text-white p-2 rounded">Manage Waitlist</button>
   <input v-model="searchQuery" type="text" class="border p-2 rounded w-full max-w-md" placeholder="Search by table number..." />
 </div>
 
@@ -92,9 +90,9 @@ import AdminLayout from '@/Layouts/AdminLayout.vue';
       goToCreate() {
         Inertia.visit('/admin/tables/create');
       },
-      goToReservations() {
-  Inertia.visit(this.$page.props.reservationsRoute);
-},
+      goToWaitlists() {
+    Inertia.visit('/admin/waitlists');
+  },
       goToEdit(tableId) {
         Inertia.visit(`/admin/tables/${tableId}/edit`);
       },

@@ -28,6 +28,7 @@ createInertiaApp({
       console.error(`Failed to resolve ${name}:`, err);
       throw new Error(`Component ${name} not found`);
     });
+    
   },
   setup({ el, App, props, plugin }) {
     const app = createApp({ render: () => h(App, props) })

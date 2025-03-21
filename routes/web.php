@@ -21,6 +21,7 @@ use App\Http\Controllers\User\UserTableController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\InventoryController;
 use App\Http\Controllers\Admin\ReservationController;
+use App\Http\Controllers\Admin\AdminWaitlistController;
 use App\Http\Controllers\User\UserReservationsController;
 
 /*
@@ -73,6 +74,9 @@ Route::prefix('admin')->group(function () {
     Route::post('/inventory/{inventory}/add-stock', [InventoryController::class, 'addStock'])->name('admin.inventory.addStock');
     Route::get('/inventory/{inventory}/purchase-history', [InventoryController::class, 'purchaseHistory'])->name('admin.inventory.purchase-history');
 
+    Route::get('/waitlists', [AdminWaitlistController::class, 'index'])->name('admin.waitlists.index');
+    Route::put('/waitlists/{waitlist}', [AdminWaitlistController::class, 'update'])->name('admin.waitlists.update');
+
         Route::post('/purchases', [PurchaseController::class, 'store'])->name('admin.purchases.store');
 
         Route::post('/purchases', [PurchaseController::class, 'store'])->name('purchases.store');
@@ -82,6 +86,7 @@ Route::prefix('admin')->group(function () {
         Route::get('/reservations/{reservation}/edit', [ReservationController::class, 'edit'])->name('admin.reservations.edit');
         Route::put('/reservations/{reservation}', [ReservationController::class, 'update'])->name('admin.reservations.update');
         Route::delete('/reservations/{reservation}', [ReservationController::class, 'destroy'])->name('admin.reservations.destroy');
+        Route::put('/admin/waitlists/{waitlist}', [ReservationController::class, 'updateWaitlistStatus'])->name('admin.waitlists.update');
 
     Route::get('/users', [UserController::class, 'index'])->name('admin.users.index');
     Route::get('/users/create', [UserController::class, 'create'])->name('admin.users.create');
@@ -113,15 +118,16 @@ Route::get('/reservation', [HomeController::class, 'index'])->name('reservation'
         Route::get('/orders/track/{order}', [UserOrderController::class, 'track'])->name('orders.track');
         Route::get('/orders/preorder', [UserOrderController::class, 'preorder'])->name('orders.preorder');
         Route::post('/orders/preorder', [UserOrderController::class, 'storePreorder'])->name('orders.storePreorder');
-        
+
         Route::get('/tables', [UserTableController::class, 'index'])->name('tables.index');
         Route::post('/tables', [UserTableController::class, 'store'])->name('tables.store');
         Route::get('/tables/available', [UserTableController::class, 'availableTables'])->name('tables.available');
         Route::get('/reservations', [UserReservationsController::class, 'index'])->name('reservations.index');
-
-        Route::get('/waitlist', [WaitlistController::class, 'index'])->name('waitlist.index');
-    Route::post('/waitlist', [WaitlistController::class, 'store'])->name('waitlist.store');
-
+        Route::post('/reservations/confirm-from-waitlist/{waitlist}', [UserReservationsController::class, 'confirmFromWaitlist'])->name('reservations.confirm-from-waitlist');
+        Route::post('/reservations/store-from-waitlist/{waitlist}', [UserReservationsController::class, 'storeFromWaitlist'])->name('reservations.store-from-waitlist');
+    
+Route::post('/waitlists', [WaitlistController::class, 'store'])->name('waitlists.store');
+Route::delete('/waitlists/{waitlist}', [WaitlistController::class, 'destroy'])->name('waitlists.destroy');
 
     Route::get('/orders', [OrderController::class, 'index'])->name('admin.orders.index');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('admin.orders.show');
