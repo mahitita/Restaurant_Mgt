@@ -15,7 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('inventory_id')->constrained()->onDelete('cascade');
             $table->enum('action', ['added', 'deducted']);
-            $table->integer('quantity');
+            $table->string('quantity');
+            $table->string('reason')->nullable();
             $table->timestamps();
         });
     }

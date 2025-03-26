@@ -1,44 +1,40 @@
+<!-- resources/js/Components/Footer.vue -->
 <template>
-    <footer class="bg-gradient-to-r from-purple-500 to-blue-400 text-white py-10">
-      <div class="container mx-auto grid grid-cols-1 md:grid-cols-3 gap-10 px-6">
-        <!-- Brand -->
+    <footer class="bg-gursha-gold text-white py-8">
+      <div class="container mx-auto grid grid-cols-3 gap-8">
         <div>
-          <div class="flex items-center mb-4">
-            <img src="/images/gursha-logo.png" alt="Gursha Logo" class="h-14 w-auto mr-2" />
-            <span class="text-3xl font-bold">Gursha</span>
+          <h3 class="text-2xl font-bold mb-4">Gursha</h3>
+          <p class="text-sm">A taste of Ethiopia, reimagined.</p>
+        </div>
+        <div class="text-center">
+          <h4 class="text-lg font-semibold mb-4">Connect With Us</h4>
+          <div class="flex justify-center space-x-6">
+            <a href="#" class="text-2xl hover:scale-125 transition-transform duration-300">
+              <i class="fab fa-instagram animate-bounce"></i>
+            </a>
+            <a href="#" class="text-2xl hover:scale-125 transition-transform duration-300">
+              <i class="fab fa-twitter animate-bounce delay-100"></i>
+            </a>
+            <a href="#" class="text-2xl hover:scale-125 transition-transform duration-300">
+              <i class="fab fa-facebook animate-bounce delay-200"></i>
+            </a>
           </div>
-          <p class="text-sm">Savor the rich flavors of Ethiopian cuisine at Gursha, where every meal tells a story.</p>
         </div>
-
-        <!-- Quick Links -->
         <div>
-          <h3 class="text-lg font-semibold mb-4">Quick Links</h3>
-          <ul class="space-y-2">
-            <li><Link href="/" class="hover:underline">Home</Link></li>
-            <li><Link href="#menus" class="hover:underline">Menus</Link></li>
-            <li><Link href="#tables" class="hover:underline">Tables</Link></li>
-            <li><Link href="#about" class="hover:underline">About Us</Link></li>
-            <li><Link href="#contact" class="hover:underline">Contact Us</Link></li>
-          </ul>
-        </div>
-
-        <!-- Contact Info -->
-        <div>
-          <h3 class="text-lg font-semibold mb-4">Contact Us</h3>
-          <p class="text-sm">123 Ethiopian St, Addis Ababa</p>
-          <p class="text-sm">Phone: +251 912 345 678</p>
-          <p class="text-sm">Email: info@gursha.et</p>
+          <h4 class="text-lg font-semibold mb-4">Find Us</h4>
+          <p class="text-sm">123 Spice Lane, Seattle, WA</p>
+          <div class="h-20 w-full bg-gray-300 mt-2 rounded animate-pulse"></div> <!-- Mini-map placeholder -->
         </div>
       </div>
-      <div class="mt-8 text-center text-sm border-t border-white pt-4">
-        &copy; {{ new Date().getFullYear() }} Gursha. All rights reserved.
-      </div>
+      <p class="text-center text-sm mt-6">&copy; 2025 Gursha. All rights reserved.</p>
     </footer>
   </template>
-
-  <script>
-  import { Link } from '@inertiajs/vue3';
-  export default {
-    components: { Link },
-  };
-  </script>
+  
+  <style scoped>
+  .delay-100 {
+    animation-delay: 0.1s;
+  }
+  .delay-200 {
+    animation-delay: 0.2s;
+  }
+  </style>

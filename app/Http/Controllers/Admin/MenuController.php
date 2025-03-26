@@ -44,7 +44,10 @@ class MenuController extends Controller
                 'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
                 'prep_time' => 'nullable|integer|min:1',
                 'available' => 'required|boolean', // Accepts 1, 0, true, false
-                'inventory_items' => 'nullable|string',
+                'inventory_items' => 'nullable|array', // Updated to array
+                'inventory_items.*.id' => 'required_with:inventory_items|exists:inventories,id',
+                'inventory_items.*.quantity' => 'required_with:inventory_items|numeric|min:0',
+                'inventory_items.*.unit' => 'required_with:inventory_items|string',
             ]);
 
             Log::info('Validated Data:', $validated);
@@ -55,6 +58,9 @@ class MenuController extends Controller
             } else {
                 $imagePath = null;
             }
+
+            // No need for json_decode; inventory_items is already an array
+            $inventoryItems = $request->input('inventory_items', []);
 
             $menu = Menu::create([
                 'name' => $request->name,
@@ -69,7 +75,6 @@ class MenuController extends Controller
 
             Log::info('Menu Created:', $menu->toArray());
 
-            $inventoryItems = $request->inventory_items ? json_decode($request->inventory_items, true) : [];
             if (!empty($inventoryItems)) {
                 $syncData = collect($inventoryItems)->mapWithKeys(function ($item) {
                     return [$item['id'] => ['quantity' => $item['quantity'], 'unit' => $item['unit']]];
@@ -93,10 +98,10 @@ class MenuController extends Controller
                 Log::info('Menu Updated with Inventory:', $menu->toArray());
             }
 
-            return redirect()->route('admin.menus')->with('success', 'Menu item created successfully.');
+            return redirect()->route('admin.menus')->with('success', 'Menu item created successfully.')->setStatusCode(303);
         } catch (\Exception $e) {
             Log::error('Menu Creation Failed:', ['error' => $e->getMessage()]);
-            return redirect()->back()->withErrors(['error' => $e->getMessage()])->withInput();
+            return redirect()->back()->withErrors(['error' => $e->getMessage()])->withInput()->setStatusCode(303);
         }
     }
 
@@ -157,7 +162,7 @@ class MenuController extends Controller
             $menu->save();
         }
 
-        return redirect()->route('admin.menus')->with('success', 'Menu item updated successfully.');
+        return redirect()->route('admin.menus')->with('success', 'Menu item updated successfully.')->setStatusCode(303);
     }
 
     public function destroy(Menu $menu)
@@ -166,26 +171,26 @@ class MenuController extends Controller
             Storage::disk('public')->delete($menu->image);
         }
         $menu->delete(); // Cascade deletes inventory_menu entries
-        return redirect()->route('admin.menus')->with('success', 'Menu item deleted successfully.');
+        return redirect()->route('admin.menus')->with('success', 'Menu item deleted successfully.')->setStatusCode(303);
     }
 
     public function profitReport()
-{
-    $menus = Menu::with(['category', 'inventories'])->get()->map(function ($menu) {
-        $profit = $menu->price - $menu->cost;
-        $profitMargin = $menu->price > 0 ? ($profit / $menu->price) * 100 : 0; // Percentage
-        return [
-            'id' => $menu->id,
-            'name' => $menu->name,
-            'category' => $menu->category ? $menu->category->name : 'N/A',
-            'price' => $menu->price,
-            'cost' => $menu->cost,
-            'profit' => $profit,
-            'profit_margin' => round($profitMargin, 2), // Rounded to 2 decimals
-            'available' => $menu->available,
-        ];
-    });
+    {
+        $menus = Menu::with(['category', 'inventories'])->get()->map(function ($menu) {
+            $profit = $menu->price - $menu->cost;
+            $profitMargin = $menu->price > 0 ? ($profit / $menu->price) * 100 : 0; // Percentage
+            return [
+                'id' => $menu->id,
+                'name' => $menu->name,
+                'category' => $menu->category ? $menu->category->name : 'N/A',
+                'price' => $menu->price,
+                'cost' => $menu->cost,
+                'profit' => $profit,
+                'profit_margin' => round($profitMargin, 2), // Rounded to 2 decimals
+                'available' => $menu->available,
+            ];
+        });
 
-    return inertia('Admin/Menu/ProfitReport', ['menus' => $menus]);
-}
+        return inertia('Admin/Menu/ProfitReport', ['menus' => $menus]);
+    }
 }

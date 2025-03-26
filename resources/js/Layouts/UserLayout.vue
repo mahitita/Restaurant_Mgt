@@ -1,21 +1,17 @@
 <template>
-    <div class="min-h-screen bg-gray-100 flex flex-col">
-      <Header />
-      <main class="flex-grow">
+    <div>
+      <Header :auth="auth" />
+      <main>
         <slot />
       </main>
       <Footer />
     </div>
   </template>
 
-  <script>
-  import Header from '../Components/Header.vue';
-  import Footer from '../Components/Footer.vue';
-
-  export default {
-    components: {
-      Header,
-      Footer,
-    },
-  };
+  <script setup>
+  import Header from '../Components/Header.vue'; // Adjust path
+  import Footer from '@/Components/Footer.vue';
+  defineProps({
+    auth: Object,
+  });
   </script>

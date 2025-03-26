@@ -32,9 +32,10 @@
   </template>
   
   <script>
-  import { Inertia } from '@inertiajs/inertia';
-  
+  import { router } from '@inertiajs/vue3';
+  import AdminLayout from '@/Layouts/AdminLayout.vue';
   export default {
+    layout: AdminLayout,
     props: {
       waitlists: Array,
       tables: Array,

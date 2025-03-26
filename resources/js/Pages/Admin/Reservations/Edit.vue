@@ -41,7 +41,7 @@
   </template>
 
   <script>
-  import { Inertia } from '@inertiajs/inertia';
+  import { router } from '@inertiajs/vue3';
 
   export default {
     props: {
@@ -63,7 +63,7 @@
         Inertia.put(`/admin/reservations/${this.reservation.id}`, this.form);
       },
       goToIndex() {
-        Inertia.visit('/admin/reservations');
+        router.get('/admin/reservations');
       },
     },
   };

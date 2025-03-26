@@ -67,10 +67,11 @@
   </template>
 
   <script>
-  import { Inertia } from '@inertiajs/inertia';
+  import { router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
   export default {
     layout: AdminLayout,
+    name: 'AdminMenuIndex',
     props: {
       menus: Array,
     },
@@ -91,10 +92,10 @@ import AdminLayout from '@/Layouts/AdminLayout.vue';
     },
     methods: {
       goToCreate() {
-        Inertia.visit('/admin/menus/create');
+        router.get('/admin/menus/create');
       },
       goToEdit(menuId) {
-        Inertia.visit(`/admin/menus/${menuId}/edit`);
+        router.get(`/admin/menus/${menuId}/edit`);
       },
       deleteMenu(menu) {
         if (confirm('Are you sure you want to delete this menu item?')) {

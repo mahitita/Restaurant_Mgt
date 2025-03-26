@@ -1,160 +1,177 @@
 <template>
     <UserLayout>
       <div class="container mx-auto px-4 py-8">
-        <h1 class="text-4xl font-bold mb-8 text-gursha-primary">Reserve a Table at Gursha</h1>
+        <!-- Header -->
+        <section class="text-center mb-8">
+          <h1 class="text-3xl md:text-4xl font-extrabold text-gray-800 animate-fade-in">Reserve a Table at Gursha</h1>
+          <p class="text-lg text-gray-600 mt-2">Book your spot for an unforgettable dining experience.</p>
+        </section>
   
         <!-- Date/Time Picker -->
-        <div class="mb-8">
-          <label for="reservationTime" class="block font-semibold mb-2 text-gray-800 text-lg">Select Date and Time:</label>
-          <input
-            type="datetime-local"
-            v-model="reservationTime"
-            @change="fetchAvailableTables"
-            class="border p-3 rounded-lg w-full md:w-1/3 shadow-md focus:ring-gursha-primary focus:border-gursha-primary text-gray-700"
-            :min="minDateTime"
-          />
+        <div class="mb-8 flex justify-center">
+          <div class="bg-white p-4 rounded-lg shadow-md w-full max-w-sm">
+            <label for="reservationTime" class="block text-sm font-semibold text-gray-700 mb-2">Date & Time</label>
+            <input
+              type="datetime-local"
+              v-model="reservationTime"
+              @change="fetchAvailableTables"
+              class="w-full p-2 border rounded-md text-gray-700 focus:ring-orange-500 focus:border-orange-500 transition"
+              :min="minDateTime"
+            />
+          </div>
         </div>
   
         <!-- Table Map -->
-        <svg viewBox="0 0 1000 600" class="w-full h-auto border rounded-lg shadow-xl bg-gray-50 mb-8">
-          <g v-for="table in tables" :key="table.id" @click="toggleTable(table)" style="cursor: pointer">
-            <!-- Table Shapes -->
-            <rect
-              v-if="table.type === 'rectangle'"
-              :x="table.x_coordinate"
-              :y="table.y_coordinate"
-              :width="table.width"
-              :height="table.height"
-              :fill="getTableFill(table)"
-              stroke="black"
-              rx="10"
-              ry="10"
-            />
-            <circle
-              v-else-if="table.type === 'round'"
-              :cx="table.x_coordinate"
-              :cy="table.y_coordinate"
-              :r="table.width / 2"
-              :fill="getTableFill(table)"
-              stroke="black"
-            />
-            <ellipse
-              v-else-if="table.type === 'oval'"
-              :cx="table.x_coordinate + table.width / 2"
-              :cy="table.y_coordinate + table.height / 2"
-              :rx="table.width / 2"
-              :ry="table.height / 2"
-              :fill="getTableFill(table)"
-              stroke="black"
-            />
-            <rect
-              v-else-if="table.type === 'square'"
-              :x="table.x_coordinate"
-              :y="table.y_coordinate"
-              :width="table.width"
-              :height="table.width"
-              :fill="getTableFill(table)"
-              stroke="black"
-              rx="10"
-              ry="10"
-            />
-            <!-- Table Label -->
-            <text
-              :x="table.x_coordinate + (table.type === 'rectangle' || table.type === 'square' ? table.width / 2 : 0)"
-              :y="table.y_coordinate + (table.type === 'rectangle' || table.type === 'square' ? table.height / 2 : 0)"
-              text-anchor="middle"
-              alignment-baseline="middle"
-              fill="black"
-              font-size="16"
-              font-weight="bold"
-            >
-              {{ table.table_number }} ({{ table.seats }} seats)
-            </text>
-            <!-- Chairs -->
-            <circle
-              v-for="chair in getChairs(table)"
-              :key="chair.id"
-              :cx="chair.x"
-              :cy="chair.y"
-              r="12"
-              fill="#FFD700"
-              stroke="black"
-              stroke-width="1"
-            />
-            <text
-              v-for="chair in getChairs(table)"
-              :key="chair.id + '-label'"
-              :x="chair.x"
-              :y="chair.y + 4"
-              text-anchor="middle"
-              fill="black"
-              font-size="10"
-            >
-              {{ chair.seatNumber }}
-            </text>
-          </g>
-        </svg>
+        <div class="flex justify-center mb-8">
+          <svg viewBox="0 0 600 400" class="w-full max-w-2xl h-auto border rounded-lg shadow-xl bg-gray-50">
+            <g v-for="table in tables" :key="table.id" @click="toggleTable(table)" class="cursor-pointer group">
+              <!-- Table Shapes -->
+              <rect
+                v-if="table.type === 'rectangle'"
+                :x="table.x_coordinate"
+                :y="table.y_coordinate"
+                :width="table.width"
+                :height="table.height"
+                :fill="getTableFill(table)"
+                stroke="#333"
+                rx="5"
+                ry="5"
+                class="transition-all duration-300 group-hover:fill-opacity-80"
+              />
+              <circle
+                v-else-if="table.type === 'round'"
+                :cx="table.x_coordinate"
+                :cy="table.y_coordinate"
+                :r="table.width / 2"
+                :fill="getTableFill(table)"
+                stroke="#333"
+                class="transition-all duration-300 group-hover:fill-opacity-80"
+              />
+              <ellipse
+                v-else-if="table.type === 'oval'"
+                :cx="table.x_coordinate + table.width / 2"
+                :cy="table.y_coordinate + table.height / 2"
+                :rx="table.width / 2"
+                :ry="table.height / 2"
+                :fill="getTableFill(table)"
+                stroke="#333"
+                class="transition-all duration-300 group-hover:fill-opacity-80"
+              />
+              <rect
+                v-else-if="table.type === 'square'"
+                :x="table.x_coordinate"
+                :y="table.y_coordinate"
+                :width="table.width"
+                :height="table.width"
+                :fill="getTableFill(table)"
+                stroke="#333"
+                rx="5"
+                ry="5"
+                class="transition-all duration-300 group-hover:fill-opacity-80"
+              />
+              <!-- Table Label -->
+              <text
+                :x="table.x_coordinate + (table.type === 'rectangle' || table.type === 'square' ? table.width / 2 : 0)"
+                :y="table.y_coordinate + (table.type === 'rectangle' || table.type === 'square' ? table.height / 2 : 0)"
+                text-anchor="middle"
+                alignment-baseline="middle"
+                fill="#333"
+                font-size="12"
+                font-weight="600"
+              >
+                T{{ table.table_number }} ({{ table.seats }})
+              </text>
+              <!-- Chairs -->
+              <circle
+                v-for="chair in getChairs(table)"
+                :key="chair.id"
+                :cx="chair.x"
+                :cy="chair.y"
+                r="8"
+                fill="#FFD700"
+                stroke="#333"
+                stroke-width="1"
+                class="transition-all duration-300"
+              />
+            </g>
+          </svg>
+        </div>
+  
+        <!-- Legend -->
+        <div class="flex justify-center gap-6 mb-8 text-sm text-gray-700">
+          <div class="flex items-center">
+            <div class="w-4 h-4 bg-green-300 mr-2 rounded"></div> Available
+          </div>
+          <div class="flex items-center">
+            <div class="w-4 h-4 bg-gray-300 mr-2 rounded"></div> Unavailable
+          </div>
+          <div class="flex items-center">
+            <div class="w-4 h-4 bg-green-500 mr-2 rounded"></div> Selected
+          </div>
+        </div>
   
         <!-- Waitlist Option -->
-        <div class="mt-6 p-6 bg-gursha-light border border-gursha-accent rounded-lg shadow-md">
-          <p v-if="preferredTableId && !tables.find(t => t.id === preferredTableId)?.available" class="text-xl font-semibold text-gursha-secondary">
-            Table {{ tables.find(t => t.id === preferredTableId)?.table_number }} is not available
+        <div class="mt-6 p-4 bg-orange-50 rounded-lg shadow-md max-w-md mx-auto">
+          <p v-if="preferredTableId && !tables.find(t => t.id === preferredTableId)?.available" class="text-lg font-semibold text-orange-600">
+            Table {{ tables.find(t => t.id === preferredTableId)?.table_number }} is unavailable
           </p>
-          <p v-else-if="!tables.some(t => t.available)" class="text-xl font-semibold text-gursha-secondary">
-            No tables available for {{ reservationTime }}
+          <p v-else-if="!tables.some(t => t.available)" class="text-lg font-semibold text-orange-600">
+            No tables available
           </p>
-          <p v-else class="text-lg text-gray-700">Want a specific table? Join the waitlist!</p>
-          <div class="mt-4">
-            <label class="block text-gray-700 font-medium mb-2">Party Size:</label>
-            <input
-              type="number"
-              v-model="partySize"
-              min="1"
-              class="border p-2 rounded w-24 shadow-sm focus:ring-gursha-primary focus:border-gursha-primary"
-            />
-          </div>
-          <div class="mt-4">
-            <label class="block text-gray-700 font-medium mb-2">Preferred Table (Optional):</label>
-            <select
-              v-model="preferredTableId"
-              class="border p-2 rounded w-full md:w-1/3 shadow-sm focus:ring-gursha-primary focus:border-gursha-primary"
-            >
-              <option :value="null">Any Table</option>
-              <option v-for="table in tables" :key="table.id" :value="table.id">
-                {{ table.table_number }} ({{ table.seats }} seats)
-              </option>
-            </select>
+          <p v-else class="text-gray-700">Join the waitlist for your preferred table!</p>
+          <div class="mt-4 grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Party Size</label>
+              <input
+                type="number"
+                v-model="partySize"
+                min="1"
+                class="w-full p-2 border rounded-md focus:ring-orange-500 focus:border-orange-500"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Preferred Table</label>
+              <select
+                v-model="preferredTableId"
+                class="w-full p-2 border rounded-md focus:ring-orange-500 focus:border-orange-500"
+              >
+                <option :value="null">Any</option>
+                <option v-for="table in tables" :key="table.id" :value="table.id">
+                  T{{ table.table_number }} ({{ table.seats }} seats)
+                </option>
+              </select>
+            </div>
           </div>
           <button
             @click="joinWaitlist"
-            class="mt-6 bg-gursha-primary text-white px-6 py-3 rounded-full hover:bg-gursha-accent hover:shadow-lg transform hover:scale-105 transition-all duration-300"
+            class="mt-4 w-full bg-orange-600 text-white px-4 py-2 rounded-full hover:bg-orange-700 hover:shadow-lg transform hover:scale-105 transition-all duration-300"
           >
             Join Waitlist
           </button>
         </div>
   
         <!-- Selected Tables and Payment -->
-        <div v-if="selectedTables.length" class="mt-6 p-6 bg-green-100 border border-green-400 rounded-lg shadow-md">
-          <p class="text-xl font-semibold text-gray-800">
-            Selected Tables: {{ selectedTables.map(id => tables.find(t => t.id === id).table_number).join(', ') }}
+        <div v-if="selectedTables.length" class="mt-6 p-4 bg-green-50 rounded-lg shadow-md max-w-md mx-auto">
+          <p class="text-lg font-semibold text-gray-800">
+            Selected: {{ selectedTables.map(id => `T${tables.find(t => t.id === id).table_number}`).join(', ') }}
           </p>
-          <p class="text-gray-700">Total Seats: {{ totalSeats }}</p>
-          <p class="text-gray-700">Deposit: ${{ selectedTables.length * 10 }} (refunded if you pay cash on-site)</p>
-          <select v-model="paymentType" class="border p-2 rounded w-full mt-4 shadow-sm focus:ring-gursha-primary">
+          <p class="text-gray-700">Seats: {{ totalSeats }}</p>
+          <p class="text-gray-700">Deposit: ${{ selectedTables.length * 10 }}</p>
+          <select v-model="paymentType" class="w-full p-2 border rounded-md mt-2 focus:ring-orange-500">
             <option value="card">Card</option>
             <option value="bank_transfer">Bank Transfer</option>
           </select>
           <input
             v-model="accountNumber"
             placeholder="Account Number"
-            class="border p-2 rounded w-full mt-4 shadow-sm focus:ring-gursha-primary"
+            class="w-full p-2 border rounded-md mt-2 focus:ring-orange-500"
           />
           <button
             @click="reserveTables"
-            class="mt-4 bg-gursha-primary text-white px-6 py-3 rounded-full hover:bg-gursha-accent hover:shadow-lg transform hover:scale-105 transition-all duration-300"
+            class="mt-4 w-full bg-orange-600 text-white px-4 py-2 rounded-full hover:bg-orange-700 hover:shadow-lg transform hover:scale-105 transition-all duration-300"
             :disabled="isReserving || !accountNumber"
           >
-            {{ isReserving ? 'Reserving...' : 'Reserve with Deposit' }}
+            {{ isReserving ? 'Reserving...' : 'Reserve Now' }}
           </button>
         </div>
       </div>
@@ -196,15 +213,12 @@
   
   const toggleTable = (table) => {
     if (!table.available) {
-      preferredTableId.value = table.id; // Set as preferred if unavailable
+      preferredTableId.value = table.id;
       return;
     }
     const index = selectedTables.value.indexOf(table.id);
-    if (index === -1) {
-      selectedTables.value.push(table.id);
-    } else {
-      selectedTables.value.splice(index, 1);
-    }
+    if (index === -1) selectedTables.value.push(table.id);
+    else selectedTables.value.splice(index, 1);
   };
   
   const reserveTables = () => {
@@ -238,9 +252,7 @@
       reservation_time: reservationTime.value,
       preferred_table_id: preferredTableId.value,
     }, {
-      onSuccess: () => {
-        router.visit(route('reservations.index'));
-      },
+      onSuccess: () => router.visit(route('reservations.index')),
       onError: (errors) => alert('Failed to join waitlist: ' + JSON.stringify(errors)),
     });
   };
@@ -252,7 +264,7 @@
   
   const getChairs = (table) => {
     const chairs = [];
-    const chairSpacing = 30;
+    const chairSpacing = 20;
   
     if (table.type === 'rectangle' || table.type === 'square') {
       const seatsPerSide = Math.floor(table.seats / 2);
@@ -287,14 +299,11 @@
   </script>
   
   <style scoped>
-  svg {
-    max-width: 1000px;
-    max-height: 600px;
+  .animate-fade-in {
+    animation: fadeIn 1s ease-in;
   }
-  rect, circle, ellipse {
-    transition: fill 0.3s ease;
-  }
-  rect:hover, circle:hover, ellipse:hover {
-    fill: #87CEFA;
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
   </style>

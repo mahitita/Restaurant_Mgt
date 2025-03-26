@@ -14,7 +14,8 @@ return new class extends Migration
         Schema::create('inventories', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->integer('quantity');
+            $table->string('quantity');
+            $table->string('remaining_quantity')->default(0);
             $table->decimal('unit_cost', 8, 2)->default(0);
             $table->string('unit')->default('unit');
             $table->integer('threshold')->default(5); // Low stock alert level

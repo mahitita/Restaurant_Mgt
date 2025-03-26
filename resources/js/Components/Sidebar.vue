@@ -68,12 +68,16 @@
         { name: 'Menus', route: 'admin.menus', icon: '🍽️' },
         { name: 'Tables', route: 'admin.tables.index', icon: '🪑' },
         { name: 'Reservations', route: 'admin.reservations.index', icon: '📝' },
-        { name: 'Inventory', route: 'admin.inventory.index', icon: '📦📊' },
+        { name: 'Ingredients', route: 'admin.inventory.index', icon: '🍴 ' },
+        { name: 'Inventory', route: 'admin.stocks.index', icon: '📦 ' },
         { name: 'Profit Report', route: 'admin.menus.profit-report', icon: '📈' },
-        { name: 'Users', route: 'admin.menus.profit-report', icon: '👥 ' },
+        { name: 'Users', route: 'admin.users.index', icon: '👥 ' },
+        { name: 'Ingredients-History', route: 'admin.inventory.stock-history', icon: '📜' },
+        { name: 'Waitlist', route: 'admin.waitlists.index', icon: '⏳  ' },
+        
 
 
-
+        
 
 
 

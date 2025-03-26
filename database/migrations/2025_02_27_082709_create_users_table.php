@@ -15,9 +15,10 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('email')->unique()->nullable();
+            $table->boolean('is_admin')->default(false);
             $table->string('phone')->unique();
             $table->string('password');
-            $table->enum('role', ['customer', 'manager', 'waiter', 'cashier'])->default('customer');
+            $table->enum('role', ['customer', 'admin', 'waiter', 'cashier', 'chef'])->default('customer');
             $table->timestamps();
         });
     }

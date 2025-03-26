@@ -62,7 +62,7 @@
   </template>
 
   <script>
-  import { Inertia } from '@inertiajs/inertia';
+  import { router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
   export default {
     layout: AdminLayout,
@@ -88,13 +88,13 @@ import AdminLayout from '@/Layouts/AdminLayout.vue';
     },
     methods: {
       goToCreate() {
-        Inertia.visit('/admin/tables/create');
+        router.get('/admin/tables/create');
       },
       goToWaitlists() {
-    Inertia.visit('/admin/waitlists');
+    router.get('/admin/waitlists');
   },
       goToEdit(tableId) {
-        Inertia.visit(`/admin/tables/${tableId}/edit`);
+        router.get(`/admin/tables/${tableId}/edit`);
       },
       deleteTable(table) {
         if (confirm(`Are you sure you want to delete table ${table.table_number}?`)) {

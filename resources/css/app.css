@@ -1,3 +1,22 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Custom Gursha Colors */
+:root {
+    --gursha-gold: #D4AF37;
+    --gursha-red: #8B0000;
+    --gursha-green: #2E8B57;
+  }
+  
+  .bg-gursha-gold { background-color: var(--gursha-gold); }
+  .text-gursha-gold { color: var(--gursha-gold); }
+  .bg-gursha-red { background-color: var(--gursha-red); }
+  .text-gursha-green { color: var(--gursha-green); }
+  
+  /* Ensure visibility */
+  body {
+    background-color: #000;
+    /* color: #fff; */
+    font-family: Arial, sans-serif;
+  }

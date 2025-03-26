@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
 use App\Models\Inventory;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
 
 class InventoryController extends Controller
 {
@@ -34,9 +35,52 @@ class InventoryController extends Controller
             'expiry_date' => 'nullable|date|after:today',
         ]);
 
-        Inventory::create($validated);
+        $inventory = Inventory::create(array_merge($validated, [
+            'remaining_quantity' => $validated['quantity'], // Set initial remaining_quantity
+        ]));
+
+        // Add initial stock log
+        if ($validated['quantity'] > 0) {
+            $inventory->logs()->create([
+                'action' => 'added',
+                'quantity' => (string) $validated['quantity'],
+                'reason' => 'Initial stock added',
+            ]);
+        }
 
         return redirect()->route('admin.inventory.index')->with('success', 'Inventory item added.');
+    }
+
+    public function stockHistory()
+    {
+        $inventories = Inventory::with('logs')->get()->map(function ($inventory) {
+            Log::info('Inventory data:', [
+                'name' => $inventory->name,
+                'quantity' => $inventory->quantity,
+                'remaining_quantity' => $inventory->remaining_quantity,
+                'initial_stock' => $inventory->initial_stock,
+                'total_stock_added' => $inventory->total_stock_added,
+                'log_count' => $inventory->logs->count(),
+            ]);
+
+            return [
+                'id' => $inventory->id,
+                'name' => $inventory->name,
+                'quantity' => $inventory->quantity,
+                'remaining_quantity' => $inventory->remaining_quantity,
+                'unit' => $inventory->unit,
+                'initial_stock' => $inventory->initial_stock,
+                'total_stock_added' => $inventory->total_stock_added,
+                'logs' => $inventory->logs->map(fn($log) => [
+                    'action' => $log->action,
+                    'quantity' => $log->quantity,
+                    'reason' => $log->reason ?? 'No reason provided',
+                    'created_at' => $log->created_at->toDateTimeString(),
+                ]),
+            ];
+        });
+
+        return inertia('Admin/Inventory/StockHistory', ['inventories' => $inventories]);
     }
 
     public function edit(Inventory $inventory)
@@ -54,6 +98,9 @@ class InventoryController extends Controller
             'threshold' => 'required|integer|min:1',
             'expiry_date' => 'nullable|date|after:today',
         ]);
+
+        // Update remaining_quantity to match quantity if it changes
+        $validated['remaining_quantity'] = $validated['quantity'];
 
         $inventory->update($validated);
 
@@ -78,9 +125,47 @@ class InventoryController extends Controller
             'supplier' => 'nullable|string|max:255',
         ]);
 
-        $inventory->addStock($validated['amount'], $validated['total_cost'], $validated['supplier']);
+        $originalQuantity = $inventory->quantity;
+        $originalRemaining = $inventory->remaining_quantity;
+        $originalUnitCost = $inventory->unit_cost;
 
-        return redirect()->route('admin.inventory.index')->with('success', "Added {$validated['amount']} to {$inventory->name}.");
+        Log::info('Adding stock:', [
+            'inventory' => $inventory->name,
+            'original_quantity' => $originalQuantity,
+            'original_remaining' => $originalRemaining,
+            'amount' => $validated['amount'],
+        ]);
+
+        $inventory->increment('quantity', $validated['amount']);
+        $inventory->increment('remaining_quantity', $validated['amount']);
+
+        $inventory->purchases()->create([
+            'quantity' => $validated['amount'],
+            'cost' => $validated['total_cost'],
+            'supplier' => $validated['supplier'],
+        ]);
+
+        $inventory->logs()->create([
+            'action' => 'added',
+            'quantity' => (string) $validated['amount'],
+            'reason' => 'Stock added manually' . ($validated['supplier'] ? " by supplier: {$validated['supplier']}" : ''),
+        ]);
+
+        $existingValue = $originalQuantity * $originalUnitCost;
+        $newValue = $validated['total_cost'];
+        $newTotalQuantity = $originalQuantity + $validated['amount'];
+        $inventory->unit_cost = $newTotalQuantity > 0 ? ($existingValue + $newValue) / $newTotalQuantity : 0;
+
+        $inventory->save();
+
+        Log::info('Stock added:', [
+            'inventory' => $inventory->name,
+            'new_quantity' => $inventory->quantity,
+            'new_remaining' => $inventory->remaining_quantity,
+            'new_unit_cost' => $inventory->unit_cost,
+        ]);
+
+        return redirect()->route('admin.inventory.index')->with('success', 'Stock added successfully.');
     }
 
     public function purchaseHistory(Inventory $inventory)

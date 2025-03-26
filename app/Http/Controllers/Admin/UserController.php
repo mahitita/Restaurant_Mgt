@@ -38,7 +38,7 @@ class UserController extends Controller
             'email' => 'nullable|email|unique:users,email',
             'phone' => 'required|string|unique:users,phone|max:15',
             'password' => 'required|string|min:8',
-            'role' => 'required|in:customer,manager,waiter,cheaf,cashier',
+            'role' => 'required|in:customer,admin,waiter,chef,cashier',
         ]);
 
         User::create([
@@ -71,7 +71,7 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'nullable|email|unique:users,email,' . $user->id,
             'phone' => 'required|string|unique:users,phone,' . $user->id . '|max:15',
-            'role' => 'required|in:customer,manager,waiter,cheaf,cashier',
+            'role' => 'required|in:customer,admin,waiter,chef,cashier',
             'password' => 'nullable|string|min:8',
         ]);
 
@@ -92,8 +92,8 @@ class UserController extends Controller
 
     public function destroy(User $user)
     {
-        if ($user->role === 'manager') {
-            return redirect()->back()->with('error', 'Cannot delete a manager.');
+        if ($user->role === 'admin') {
+            return redirect()->back()->with('error', 'Cannot delete a admin.');
         }
 
         $user->delete();

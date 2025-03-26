@@ -27,7 +27,7 @@
           <label class="block text-gray-700">Role</label>
           <select v-model="form.role" class="border p-2 w-full" required>
             <option value="customer">Customer</option>
-            <option value="manager">Manager</option>
+            <option value="admin">Admin</option>
             <option value="waiter">Waiter</option>
             <option value="chef">Chef</option>
             <option value="cashier">Cashier</option>
@@ -40,7 +40,7 @@
   </template>
 
   <script>
-  import { Inertia } from '@inertiajs/inertia';
+  import { router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
   export default {
     layout: AdminLayout,
@@ -62,7 +62,7 @@ import AdminLayout from '@/Layouts/AdminLayout.vue';
         Inertia.put(`/admin/users/${this.user.id}`, this.form);
       },
       goToIndex() {
-        Inertia.visit('/admin/users');
+        router.get ('/admin/users');
       },
     },
   };

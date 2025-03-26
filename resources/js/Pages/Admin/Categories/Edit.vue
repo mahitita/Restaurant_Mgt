@@ -18,7 +18,7 @@
         <div class="flex justify-end space-x-3">
           <button
             type="button"
-            @click="$emit('close')"
+            @click="emit('close')"
             class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
           >
             Cancel
@@ -53,12 +53,12 @@ export default {
       form.put(route("admin.categories.update", props.category.id), {
         onSuccess: () => {
             form.reset();
-            this.$emit("close");
+            emit("close");
           },
       });
     }
 
-    return { form, submit };
+    return { form, submit, emit };
   },
 };
 </script>

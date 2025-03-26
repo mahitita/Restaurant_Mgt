@@ -79,7 +79,7 @@
   </template>
 
   <script>
-  import { Inertia } from '@inertiajs/inertia';
+  import { router } from '@inertiajs/vue3';
 import  AdminLayout from '@/Layouts/AdminLayout.vue';
   export default {
     layout: AdminLayout,
@@ -113,7 +113,7 @@ import  AdminLayout from '@/Layouts/AdminLayout.vue';
         this.form.inventory_items.push({ id: '', quantity: '', unit: 'unit' });
       },
       goToIndex() {
-        Inertia.visit('/admin/menus');
+        router.get ('/admin/menus');
       },
       removeInventoryItem(index) {
         this.form.inventory_items.splice(index, 1);
@@ -138,7 +138,7 @@ import  AdminLayout from '@/Layouts/AdminLayout.vue';
           formData.append('image', this.form.image);
         }
         formData.append('_method', 'PUT');
-        Inertia.post(`/admin/menus/${this.menu.id}`, formData);
+        router.post(`/admin/menus/${this.menu.id}`, formData);
       },
     },
   };

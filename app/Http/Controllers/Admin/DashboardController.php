@@ -6,7 +6,9 @@ use App\Models\Menu;
 use Inertia\Inertia;
 use App\Models\Order;
 use App\Models\Table;
+use App\Models\Inventory;
 use App\Models\OrderItem;
+use App\Models\Reservation;
 use App\Models\InventoryLog;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -15,64 +17,32 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        // Revenue Data
-        $todayOrders = Order::whereDate('created_at', today())->get();
-        $totalRevenue = $todayOrders->sum('total_price');
-        $hourlyRevenue = $todayOrders->groupBy(fn($o) => $o->created_at->hour)
-            ->map->sum('total_price');
-        $slowHours = $hourlyRevenue->filter(fn($rev, $hour) => $rev < 50 && now()->hour > $hour)->keys();
-
-        // Staff Data
-        $activeOrders = Order::whereIn('status', ['received', 'preparing'])->count();
-        // $tableTurnover = Table::where('status', 'occupied')->avg(fn($t) => now()->diffInMinutes($t->updated_at));
-        $suggestedStaff = max(1, ceil($activeOrders / 5)); // 1 staff per 5 orders
-
-        // Inventory Data
-        $menuItems = Menu::all();
-        $lowStock = $menuItems->filter(fn($item) => $item->stock_quantity < 10);
-        $dailyUsage = OrderItem::whereDate('created_at', today())
-            ->groupBy('menu_id');
-            // ->map->sum('quantity');
-
-        // Customer Data
-        $topItems = OrderItem::whereDate('created_at', today())
-            ->with('menu')
-            ->groupBy('menu_id')
-            // ->map->sum('quantity')
-            // ->sortDesc()
-            ->take(3);
-        $repeatCustomers = Order::whereDate('created_at', today())
-            ->groupBy('user_id')
-            // ->filter(fn($orders) => $orders->count() > 1)
-            ->count();
-        // $feedback = Feedback::whereDate('created_at', today())->avg('rating') ?? 0;
-
-        return Inertia::render('Admin/Dashboard', [
-            'revenue' => [
-                'total' => $totalRevenue,
-                'hourly' => $hourlyRevenue,
-                'slow_hours' => $slowHours,
-            ],
-            'staff' => [
-                'active_orders' => $activeOrders,
-                'table_turnover' => round($tableTurnover ?? 30),
-                'suggested_staff' => $suggestedStaff,
-            ],
-            'inventory' => [
-                'low_stock' => $lowStock->map(fn($item) => [
-                    'name' => $item->name,
-                    'stock' => $item->stock_quantity,
-                ]),
-                'daily_usage' => $dailyUsage,
-            ],
-            'customers' => [
-                // 'top_items' => $topItems->map(fn($qty, $id) => [
-                    // 'name' => Menu::find($id)->name,
-                    // 'quantity' => $qty,
-                // ]),
-                'repeat_customers' => $repeatCustomers,
-                // 'average_rating' => round($feedback, 1),
-            ],
+        $ordersCount = Order::whereDate('created_at', today())->count();
+        $revenue = Order::whereDate('created_at', today())->sum('total_price') ?? 0;
+        $reservationsCount = Reservation::whereDate('reservation_time', today())->where('status', 'confirmed')->count();
+        $lowInventoryCount = Inventory::where('quantity', '<=', 10)->count();
+        $recentOrders = Order::with('user')->latest()->take(5)->get()->map(fn($order) => [
+            'id' => $order->id,
+            'customer' => $order->user->name,
+            'total' => number_format($order->total_price, 2),
+            'status' => $order->status,
+        ]);
+        $inventoryAlerts = Inventory::where('quantity', '<=', 10)->take(3)->get(['id', 'name', 'quantity']);
+        $reservations = Reservation::whereDate('reservation_time', today())->where('status', 'confirmed')->take(3)->get()->map(fn($res) => [
+            'id' => $res->id,
+            'customer' => $res->user->name,
+            'table' => $res->tables->first()->table_number,
+            'time' => $res->reservation_time->format('h:i A'),
+        ]);
+    
+        return inertia('Admin/AdminDashboard', [
+            'ordersCount' => $ordersCount,
+            'revenue' => $revenue,
+            'reservationsCount' => $reservationsCount,
+            'lowInventoryCount' => $lowInventoryCount,
+            'recentOrders' => $recentOrders,
+            'inventoryAlerts' => $inventoryAlerts,
+            'reservations' => $reservations,
         ]);
     }
 

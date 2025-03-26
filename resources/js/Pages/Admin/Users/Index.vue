@@ -40,7 +40,7 @@
             <td class="p-3">
               <select v-model="user.role" @change="updateRole(user)" class="border p-1 rounded">
                 <option value="customer">Customer</option>
-                <option value="manager">Manager</option>
+                <option value="admin">Admin</option>
                 <option value="waiter">Waiter</option>
                 <option value="chef">Chef</option>
                 <option value="cashier">Cashier</option>
@@ -58,7 +58,7 @@
   </template>
 
   <script>
-  import { Inertia } from '@inertiajs/inertia';
+  import { router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
   export default {
     layout: AdminLayout,
@@ -86,10 +86,10 @@ import AdminLayout from '@/Layouts/AdminLayout.vue';
     },
     methods: {
       goToCreate() {
-        Inertia.visit('/admin/users/create');
+        router.get('/admin/users/create');
       },
       goToEdit(userId) {
-        Inertia.visit(`/admin/users/${userId}/edit`);
+        router.get(`/admin/users/${userId}/edit`);
       },
       deleteUser(user) {
         if (confirm(`Are you sure you want to delete ${user.name}?`)) {
