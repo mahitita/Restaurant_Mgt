@@ -13,7 +13,7 @@
         <div id="receipt" class="bg-white p-6 rounded-lg shadow-md max-w-md mx-auto receipt-style">
           <!-- Header with Logo and Restaurant Name -->
           <div class="text-center mb-6">
-            <img src="/images/gursha-logo.png" alt="Gursha Logo" class="w-24 mx-auto mb-2" />
+            <img src="/image/logo.jpg" alt="Gursha Logo" class="w-24 mx-auto mb-2" />
             <h1 class="text-2xl font-bold">Gursha Restaurant</h1>
             <p class="text-sm text-gray-600">123 Flavor Street, Food City</p>
             <p class="text-sm text-gray-600">Phone: (123) 456-7890</p>
@@ -23,9 +23,9 @@
           <div class="border-t border-b py-4">
             <h3 class="text-lg font-semibold mb-2">Order #{{ order.id }}</h3>
             <p><strong>Type:</strong> {{ order.order_type }}</p>
-            <p><strong>Status:</strong> {{ order.status }}</p>
-            <p><strong>Total:</strong> ${{ order.total_price }}</p>
-            <p><strong>Estimated Wait:</strong> {{ order.estimated_wait_minutes ?? 'Calculating...' }} minutes</p>
+            <!-- <p><strong>Status:</strong> {{ order.status }}</p> -->
+            <p><strong>Total:</strong> Br {{ order.total_price }}</p>
+            <!-- <p><strong>Estimated Wait:</strong> {{ order.estimated_wait_minutes ?? 'Calculating...' }} minutes</p> -->
             <p><strong>Ordered At:</strong> {{ order.created_at }}</p>
             <p v-if="order.order_type === 'dine-in'"><strong>Table:</strong> {{ order.table_id }}</p>
             <p v-if="order.order_type === 'takeout'"><strong>Pickup Time:</strong> {{ order.pickup_time }}</p>
@@ -44,11 +44,11 @@
           <div class="border-b py-4">
             <h3 class="text-lg font-semibold mb-2">Payment Details</h3>
             <p><strong>Method:</strong> {{ payment.payment_method }}</p>
-            <p><strong>Amount:</strong> ${{ payment.amount }}</p>
+            <p><strong>Amount:</strong> Br {{ order.total_price }}</p>
             <p v-if="payment.deposit_amount > 0"><strong>Deposit Paid:</strong> ${{ payment.deposit_amount }}</p>
-            <p><strong>Deposit Refunded:</strong> {{ payment.deposit_refunded ? 'Yes' : 'No' }}</p>
+            <!-- <p><strong>Deposit Refunded:</strong> {{ payment.deposit_refunded ? 'Yes' : 'No' }}</p> -->
             <p v-if="payment.paid_at"><strong>Paid At:</strong> {{ payment.paid_at }}</p>
-            <p><strong>Status:</strong> {{ payment.status }}</p>
+            <!-- <p><strong>Status:</strong> {{ payment.status }}</p> -->
           </div>
 
           <!-- Reservation Details -->

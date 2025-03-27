@@ -43,8 +43,8 @@ class MenuController extends Controller
                 'description' => 'nullable|string',
                 'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
                 'prep_time' => 'nullable|integer|min:1',
-                'available' => 'required|boolean', // Accepts 1, 0, true, false
-                'inventory_items' => 'nullable|array', // Updated to array
+                'available' => 'required|boolean',
+                'inventory_items' => 'nullable|array',
                 'inventory_items.*.id' => 'required_with:inventory_items|exists:inventories,id',
                 'inventory_items.*.quantity' => 'required_with:inventory_items|numeric|min:0',
                 'inventory_items.*.unit' => 'required_with:inventory_items|string',
@@ -59,7 +59,6 @@ class MenuController extends Controller
                 $imagePath = null;
             }
 
-            // No need for json_decode; inventory_items is already an array
             $inventoryItems = $request->input('inventory_items', []);
 
             $menu = Menu::create([
@@ -70,7 +69,7 @@ class MenuController extends Controller
                 'image' => $imagePath,
                 'prep_time' => $request->prep_time ?? 15,
                 'cost' => 0,
-                'available' => filter_var($request->available, FILTER_VALIDATE_BOOLEAN), // Ensure boolean conversion
+                'available' => filter_var($request->available, FILTER_VALIDATE_BOOLEAN),
             ]);
 
             Log::info('Menu Created:', $menu->toArray());
@@ -170,7 +169,7 @@ class MenuController extends Controller
         if ($menu->image) {
             Storage::disk('public')->delete($menu->image);
         }
-        $menu->delete(); // Cascade deletes inventory_menu entries
+        $menu->delete();
         return redirect()->route('admin.menus')->with('success', 'Menu item deleted successfully.')->setStatusCode(303);
     }
 

@@ -1,4 +1,3 @@
-<!-- resources/js/Pages/Admin/Inventory/StockHistory.vue -->
 <template>
     <AdminLayout>
       <div class="container mx-auto p-6">

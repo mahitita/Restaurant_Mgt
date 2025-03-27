@@ -1,16 +1,10 @@
-<!-- resources/js/Pages/Admin/Orders/Index.vue -->
 <template>
-  <AdminLayout>
+
     <div class="container mx-auto py-8 px-4">
       <div class="bg-white p-6 rounded-lg shadow-lg">
         <div class="flex justify-between items-center mb-6">
           <h1 class="text-3xl font-bold text-gray-800">Orders</h1>
         </div>
-
-        <!-- Debug: Log the orders prop -->
-        <!-- <div class="mb-4 p-4 bg-gray-100 rounded-lg">
-          <pre>Orders Prop: {{ JSON.stringify(orders, null, 2) }}</pre>
-        </div> -->
 
         <!-- Success/Error Messages -->
         <transition name="fade">
@@ -162,7 +156,7 @@
         </div>
       </div>
     </div>
-  </AdminLayout>
+
 </template>
 
 <script setup>

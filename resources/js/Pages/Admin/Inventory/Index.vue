@@ -1,4 +1,3 @@
-<!-- resources/js/Pages/Admin/Inventory/Index.vue -->
 <template>
     <AdminLayout>
       <div class="container mx-auto p-6">

@@ -1,15 +1,12 @@
-<!-- resources/js/Pages/Admin/Menus/Create.vue -->
 <template>
-    <AdminLayout>
+
       <div class="container mx-auto p-6 bg-white shadow-md rounded-lg">
         <h1 class="text-3xl font-bold mb-6">Create New Menu Item</h1>
 
         <div v-if="$page.props.flash?.success" class="bg-green-100 p-3 mb-4 rounded">
           {{ $page.props.flash.success }}
         </div>
-        <div v-if="form.errors" class="bg-red-100 p-3 mb-4 rounded">
-          <p v-for="(error, field) in form.errors" :key="field">{{ field }}: {{ error }}</p>
-        </div>
+
 
         <form @submit.prevent="submit" enctype="multipart/form-data">
           <div class="mb-4">
@@ -142,7 +139,7 @@
           </button>
         </form>
       </div>
-    </AdminLayout>
+
   </template>
 
   <script setup>

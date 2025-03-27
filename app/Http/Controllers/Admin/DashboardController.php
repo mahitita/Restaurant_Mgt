@@ -12,30 +12,67 @@ use App\Models\Reservation;
 use App\Models\InventoryLog;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
     public function index()
     {
+        // Daily Stats
         $ordersCount = Order::whereDate('created_at', today())->count();
         $revenue = Order::whereDate('created_at', today())->sum('total_price') ?? 0;
         $reservationsCount = Reservation::whereDate('reservation_time', today())->where('status', 'confirmed')->count();
-        $lowInventoryCount = Inventory::where('quantity', '<=', 10)->count();
+        $lowInventoryCount = Inventory::where('remaining_quantity', '<=', 'threshold')->count();
+
+        // Recent Orders
         $recentOrders = Order::with('user')->latest()->take(5)->get()->map(fn($order) => [
             'id' => $order->id,
-            'customer' => $order->user->name,
+            'customer' => $order->user->name ?? 'Guest',
             'total' => number_format($order->total_price, 2),
             'status' => $order->status,
+            'created_at' => $order->created_at->format('h:i A'),
         ]);
-        $inventoryAlerts = Inventory::where('quantity', '<=', 10)->take(3)->get(['id', 'name', 'quantity']);
-        $reservations = Reservation::whereDate('reservation_time', today())->where('status', 'confirmed')->take(3)->get()->map(fn($res) => [
-            'id' => $res->id,
-            'customer' => $res->user->name,
-            'table' => $res->tables->first()->table_number,
-            'time' => $res->reservation_time->format('h:i A'),
-        ]);
-    
-        return inertia('Admin/AdminDashboard', [
+
+        // Inventory Alerts
+        $inventoryAlerts = Inventory::where('remaining_quantity', '<=', 'threshold')
+            ->take(3)
+            ->get(['id', 'name', 'remaining_quantity'])
+            ->map(fn($item) => [
+                'id' => $item->id,
+                'name' => $item->name,
+                'quantity' => $item->remaining_quantity,
+            ]);
+
+        // Upcoming Reservations
+        $reservations = Reservation::with('table')
+            ->whereDate('reservation_time', today())
+            ->where('status', 'confirmed')
+            ->take(3)
+            ->get()
+            ->map(fn($res) => [
+                'id' => $res->id,
+                'customer' => $res->user->name ?? 'Guest',
+                'table' => $res->table ? $res->table->table_number : 'N/A',
+                'time' => $res->reservation_time->format('h:i A'),
+            ]);
+
+        $revenueData = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = Carbon::today()->subDays($i);
+            $dailyRevenue = Order::whereDate('created_at', $date)->sum('total_price') ?? 0;
+            $revenueData[] = [
+                'day' => $date->format('D'),
+                'value' => $dailyRevenue,
+            ];
+        }
+
+        $pendingTasks = [
+            'unprocessed_orders' => Order::whereIn('status', ['pending', 'received'])->count(),
+            'low_inventory' => $lowInventoryCount,
+            'pending_reservations' => Reservation::where('status', 'pending')->count(),
+        ];
+
+        return Inertia::render('Admin/AdminDashboard', [
             'ordersCount' => $ordersCount,
             'revenue' => $revenue,
             'reservationsCount' => $reservationsCount,
@@ -43,6 +80,8 @@ class DashboardController extends Controller
             'recentOrders' => $recentOrders,
             'inventoryAlerts' => $inventoryAlerts,
             'reservations' => $reservations,
+            'revenueData' => $revenueData,
+            'pendingTasks' => $pendingTasks,
         ]);
     }
 
@@ -57,7 +96,14 @@ class DashboardController extends Controller
         $menu->stock_quantity = $request->quantity;
         $menu->save();
 
-        return redirect()->route('admin.dashboard')->with('success', 'Stock updated.');
+        InventoryLog::create([
+            'inventory_id' => $menu->id,
+            'action' => 'restock',
+            'quantity' => $request->quantity,
+            'reason' => 'Manual stock update via dashboard',
+        ]);
+
+        return redirect()->route('admin.dashboard')->with('success', 'Stock updated successfully.');
     }
 
     public function logWaste(Request $request)
@@ -79,7 +125,6 @@ class DashboardController extends Controller
         $menu->stock_quantity -= ($request->quantity_used + $request->quantity_wasted);
         $menu->save();
 
-        return redirect()->route('admin.dashboard')->with('success', 'Waste logged.');
+        return redirect()->route('admin.dashboard')->with('success', 'Waste logged successfully.');
     }
 }
-

@@ -9,7 +9,7 @@
           </div>
         </div>
       </section>
-  
+
       <!-- Category Filter -->
       <div class="container mx-auto py-8 px-4 sticky top-0 bg-white z-10 shadow-sm">
         <h2 class="text-2xl md:text-3xl font-semibold text-gray-800 mb-4 text-center">Browse by Category</h2>
@@ -36,7 +36,7 @@
           </button>
         </div>
       </div>
-  
+
       <!-- Success Message -->
       <transition name="fade">
         <div v-if="showSuccess" class="fixed top-16 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 flex items-center">
@@ -44,7 +44,7 @@
           {{ successMessage }}
         </div>
       </transition>
-  
+
       <!-- Menu Items -->
       <section class="container mx-auto py-8 px-4">
         <div v-if="filteredMenus.length === 0" class="text-center text-gray-500 text-lg">
@@ -60,7 +60,7 @@
             <div class="p-3 text-center">
               <h3 class="text-md font-semibold text-gray-800 truncate">{{ menu.name }}</h3>
               <p class="text-xs text-gray-500 line-clamp-2">{{ menu.description }}</p>
-              <p class="text-orange-600 font-bold text-sm mt-1">${{ menu.price }}</p>
+              <p class="text-orange-600 font-bold text-sm mt-1">Br {{ menu.price }}</p>
               <button
                 @click="addToCart(menu)"
                 class="mt-2 bg-orange-600 text-white text-xs px-3 py-1 rounded-full hover:bg-orange-700 transition"
@@ -73,13 +73,13 @@
       </section>
     </UserLayout>
   </template>
-  
+
   <script>
   import UserLayout from '../Layouts/UserLayout.vue';
   import { useCartStore } from '../Stores/CartStore';
   import { ref } from 'vue';
   import { router } from '@inertiajs/vue3';
-  
+
   export default {
     components: { UserLayout },
     props: {
@@ -92,14 +92,14 @@
       const selectedCategory = ref(null);
       const showSuccess = ref(false);
       const successMessage = ref('');
-  
+
       const filterMenu = (categoryId) => {
         selectedCategory.value = categoryId;
         filteredMenus.value = categoryId
           ? props.menus.filter(menu => menu.category_id === categoryId)
           : props.menus;
       };
-  
+
       const addToCart = (menu) => {
         cartStore.addToCart(menu);
         successMessage.value = `${menu.name} added to cart!`;
@@ -109,7 +109,7 @@
         }, 2000);
         router.post(route('cart.add', menu.id));
       };
-  
+
       return {
         filteredMenus,
         selectedCategory,
@@ -121,7 +121,7 @@
     },
   };
   </script>
-  
+
   <style scoped>
   /* Fade Animation for Success Message */
   .fade-enter-active, .fade-leave-active {
@@ -130,7 +130,7 @@
   .fade-enter-from, .fade-leave-to {
     opacity: 0;
   }
-  
+
   /* Fade-in Animation for Hero */
   .animate-fade-in {
     animation: fadeIn 1s ease-in;
@@ -139,7 +139,7 @@
     from { opacity: 0; }
     to { opacity: 1; }
   }
-  
+
   /* Ensure Font Awesome is included */
   @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css');
   </style>

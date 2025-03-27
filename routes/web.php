@@ -35,6 +35,8 @@ use App\Http\Controllers\User\UserReservationsController;
 */
 
 // Public Routes
+Route::middleware('restrict.customer.guest')->group(function () {
+    Route::get('/', function () { return inertia('Home'); })->name('home');
 Route::get('/', function () {
     return Inertia::render('Home', ['auth' => auth()->check() ? ['user' => auth()->user()] : null]);
 })->name('home');
@@ -47,22 +49,37 @@ Route::get('/cart', function () {
 
 Route::get('/tables', [UserTableController::class, 'index'])->name('tables.index');
 
-// Customer Auth Routes
-// Route::prefix('user')->name('user.')->group(function () {
-//     Route::get('/register', [RegisterController::class, 'create'])->name('register');
-//     Route::post('/register', [RegisterController::class, 'store']);
-//     Route::get('/login', [LoginController::class, 'create'])->name('login');
-//     Route::post('/login', [LoginController::class, 'store']);
-//     Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
-// });
 
 Route::prefix('user')->group(function () {
     Route::get('/login', [LoginController::class, 'create'])->name('user.login');
     Route::post('/login', [LoginController::class, 'store'])->name('user.login.store');
     Route::post('/logout', [LoginController::class, 'destroy'])->name('user.logout');
-    Route::get('/register', fn() => inertia('User/Register'))->name('user.register');
+     Route::get('/register', fn() => inertia('User/Register'))->name('user.register');
+
+});
+  // Customer Protected Routes
+  Route::middleware('customer')->group(function () {
+
+    Route::get('/cart', [UserOrderController::class, 'cart'])->name('orders.cart');
+    Route::post('/', [UserOrderController::class, 'store'])->name('orders.store');
+    Route::get('/confirmation/{order}', [UserOrderController::class, 'confirmation'])->name('orders.confirmation');
+    Route::get('/preorder', [UserOrderController::class, 'preorder'])->name('orders.preorder');
+    Route::post('/preorder', [UserOrderController::class, 'storePreorder'])->name('orders.storePreorder');
+    Route::get('/track/{order}', [UserOrderController::class, 'track'])->name('orders.track');
+    Route::get('/my_orders', [UserOrderController::class, 'myOrders'])->name('orders.myOrders');
+
+    Route::post('/tables', [UserTableController::class, 'store'])->name('tables.store');
+    Route::get('/tables/available', [UserTableController::class, 'availableTables'])->name('tables.available');
+
+    Route::get('/reservations', [UserReservationsController::class, 'index'])->name('reservations.index');
+    Route::post('/reservations/confirm-from-waitlist/{waitlist}', [UserReservationsController::class, 'confirmFromWaitlist'])->name('reservations.confirm-from-waitlist');
+    Route::post('/reservations/store-from-waitlist/{waitlist}', [UserReservationsController::class, 'storeFromWaitlist'])->name('reservations.store-from-waitlist');
+
+    Route::post('/waitlists', [WaitlistController::class, 'store'])->name('waitlists.store');
+    Route::delete('/waitlists/{waitlist}', [WaitlistController::class, 'destroy'])->name('waitlists.destroy');
 });
 
+});
 // Admin Auth Routes
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/login', [AdminAuthController::class, 'showLoginForm'])->name('login');
@@ -155,26 +172,7 @@ Route::middleware('auth')->group(function () {
         Route::put('/tables/{table}/status', [TableController::class, 'updateStatus'])->name('tables.updateStatus');
     });
 
-    // Customer Protected Routes
-    Route::middleware('customer')->group(function () {
-        Route::get('/cart', [UserOrderController::class, 'cart'])->name('orders.cart');
-        Route::post('/', [UserOrderController::class, 'store'])->name('orders.store');
-        Route::get('/confirmation/{order}', [UserOrderController::class, 'confirmation'])->name('orders.confirmation');
-        Route::get('/preorder', [UserOrderController::class, 'preorder'])->name('orders.preorder');
-        Route::post('/preorder', [UserOrderController::class, 'storePreorder'])->name('orders.storePreorder');
-        Route::get('/track/{order}', [UserOrderController::class, 'track'])->name('orders.track');
-        Route::get('/my-orders', [UserOrderController::class, 'myOrders'])->name('orders.myOrders');
 
-        Route::post('/tables', [UserTableController::class, 'store'])->name('tables.store');
-        Route::get('/tables/available', [UserTableController::class, 'availableTables'])->name('tables.available');
-
-        Route::get('/reservations', [UserReservationsController::class, 'index'])->name('reservations.index');
-        Route::post('/reservations/confirm-from-waitlist/{waitlist}', [UserReservationsController::class, 'confirmFromWaitlist'])->name('reservations.confirm-from-waitlist');
-        Route::post('/reservations/store-from-waitlist/{waitlist}', [UserReservationsController::class, 'storeFromWaitlist'])->name('reservations.store-from-waitlist');
-
-        Route::post('/waitlists', [WaitlistController::class, 'store'])->name('waitlists.store');
-        Route::delete('/waitlists/{waitlist}', [WaitlistController::class, 'destroy'])->name('waitlists.destroy');
-    });
 });
 
 // require __DIR__.'/auth.php';

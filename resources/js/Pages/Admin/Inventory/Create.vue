@@ -1,4 +1,3 @@
-<!-- resources/js/Pages/Admin/Inventory/Create.vue -->
 <template>
 
       <div class="container mx-auto p-6 bg-white shadow-md rounded-lg">

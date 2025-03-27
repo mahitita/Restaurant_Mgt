@@ -100,7 +100,7 @@ public function updateStatus(Request $request, Table $table)
     {
         $validated = $request->validate([
             'status' => 'required|in:available,occupied,reserved',
-            'date' => 'nullable|date', // Optional date; defaults to today
+            'date' => 'nullable|date',
         ]);
 
         $checkDate = $request->date ? Carbon::parse($request->date) : now();
@@ -112,7 +112,6 @@ public function updateStatus(Request $request, Table $table)
             ->whereDate('reservation_time', $reservationDate)
             ->first();
 
-        // Handle status transitions
         switch ($validated['status']) {
             case 'available':
                 if ($reservation) {

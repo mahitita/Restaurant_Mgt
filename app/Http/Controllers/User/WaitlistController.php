@@ -24,7 +24,6 @@ class WaitlistController extends Controller
         $partySize = $request->party_size;
         $preferredTableId = $request->preferred_table_id;
 
-        // Check for available tables matching party size
         $availableTables = Table::where('seats', '>=', $partySize)
             ->whereDoesntHave('reservations', function ($query) use ($reservationTime) {
                 $query->where('status', 'confirmed')
@@ -48,12 +47,11 @@ class WaitlistController extends Controller
         $waitlist = Waitlist::create([
             'user_id' => Auth::id(),
             'party_size' => $partySize,
-            'table_id' => $preferredTableId, // Nullable if no preference
+            'table_id' => $preferredTableId,
             'estimated_wait_minutes' => $this->calculateEstimatedWaitTime($partySize, $reservationTime),
             'status' => 'waiting',
         ]);
 
-        // Flash message with estimated wait time
         return redirect()->route('reservations.index')
             ->with('success', "Added to waitlist! Estimated wait: {$waitlist->estimated_wait_minutes} minutes.");
     }
@@ -66,12 +64,11 @@ class WaitlistController extends Controller
 
         $tablesForPartySize = Table::where('seats', '>=', $partySize)->count();
         $waitFactor = $currentReservations / max(1, $tablesForPartySize);
-        $baseWait = 15; // Base wait time in minutes
-        $additionalWait = $waitFactor * 10; // Additional time per conflict
+        $baseWait = 15;
+        $additionalWait = $waitFactor * 10;
         return round($baseWait + $additionalWait);
     }
 
-    // Optional: Admin or system could call this to notify users
     public function notifyNext(Request $request)
     {
         $nextWaitlist = Waitlist::where('status', 'waiting')
@@ -81,9 +78,8 @@ class WaitlistController extends Controller
         if ($nextWaitlist) {
             $nextWaitlist->update([
                 'notified_at' => now(),
-                'status' => 'seated', // Or keep 'waiting' until they confirm
+                'status' => 'seated',
             ]);
-            // TODO: Add notification logic (e.g., email, SMS)
             return response()->json(['message' => "Notified user {$nextWaitlist->user_id}"]);
         }
 

@@ -29,7 +29,13 @@ class UserOrderController extends Controller
             ],
         ]);
     }
-
+    public function index()
+    {
+        $menus = Menu::all();
+        return Inertia::render('Menu', [
+            'menus' => $menus,
+        ]);
+    }
     public function store(Request $request)
     {
         Log::info('Order store request received:', $request->all());
@@ -52,7 +58,6 @@ class UserOrderController extends Controller
                 $totalPrice = collect($request->cart)->sum(fn($item) => $item['price'] * $item['quantity']);
                 Log::info('Calculated total price:', ['total_price' => $totalPrice]);
 
-                // Calculate prep time and priority
                 $cartItems = collect($request->cart);
                 $isPeakHour = $this->isPeakHour(now());
                 $isPriority = $this->determinePriority($cartItems, $totalPrice, $isPeakHour);
@@ -83,8 +88,6 @@ class UserOrderController extends Controller
                         'price' => $item['price'],
                     ]);
                     Log::info('Order item created:', ['menu_id' => $item['id'], 'quantity' => $item['quantity']]);
-
-                    // Deduct inventory after creating order item
                     $this->deductInventory($item['id'], $item['quantity'], $order->id);
                 }
 
@@ -152,8 +155,38 @@ class UserOrderController extends Controller
                     Log::info('Payment created for order:', ['order_id' => $order->id]);
                 }
 
-                return redirect()->route('orders.confirmation', ['order' => $order->id])
-                    ->with('success', "Order placed successfully! Estimated wait: {$estimatedWaitMinutes} minutes.");
+                // Return confirmation page directly
+                return inertia('OrderConfirmation', [
+                    'order' => [
+                        'id' => $order->id,
+                        'order_type' => $order->order_type,
+                        'total_price' => $order->total_price,
+                        'table_id' => $order->table_id,
+                        'pickup_time' => $order->pickup_time,
+                        'delivery_address' => $order->delivery_address,
+                        'estimated_wait_minutes' => $order->estimated_wait_minutes ?? 0,
+                        'order_items' => $order->orderItems->map(fn($item) => [
+                            'id' => $item->id,
+                            'menu_id' => $item->menu->name,
+                            'quantity' => $item->quantity,
+                            'price' => $item->price,
+                        ])->all(),
+                    ],
+                    'payment' => [
+                        'payment_method' => $backendPaymentMethod,
+                        'amount' => $totalPrice,
+                        'deposit_amount' => 0,
+                        'deposit_refunded' => false,
+                        'paid_at' => now(),
+                        'status' => 'paid',
+                    ],
+                    'reservations' => $reservation ? [[
+                        'id' => $reservation->id,
+                        'table_id' => $reservation->table_id,
+                        'reservation_time' => $reservation->reservation_time->toDateTimeString(),
+                    ]] : [],
+                    'success' => "Order placed successfully! Estimated wait: {$estimatedWaitMinutes} minutes.",
+                ]);
             });
         } catch (\Exception $e) {
             Log::error('Order store failed:', ['error' => $e->getMessage()]);
@@ -275,7 +308,7 @@ class UserOrderController extends Controller
             ])
             ->all();
 
-        return inertia('OrderConfirmation', [ // Updated to match component path
+        return inertia('OrderConfirmation', [
             'order' => [
                 'id' => $order->id,
                 'order_type' => $order->order_type,
@@ -287,6 +320,7 @@ class UserOrderController extends Controller
                 'order_items' => $order->orderItems->map(fn($item) => [
                     'id' => $item->id,
                     'menu_id' => $item->menu_id,
+                    'menu_name' => $item->menu ? $item->menu->name : 'Unknown',
                     'quantity' => $item->quantity,
                     'price' => $item->price,
                 ])->all(),
@@ -334,7 +368,6 @@ class UserOrderController extends Controller
             $inventory->remaining_quantity -= $requiredQuantity;
             $inventory->save();
 
-            // Log the inventory deduction with more details
             InventoryLog::create([
                 'inventory_id' => $inventory->id,
                 'action' => 'deducted',
@@ -585,9 +618,9 @@ class UserOrderController extends Controller
                 'total_price' => $order->total_price,
                 'is_priority' => $order->is_priority,
                 'estimated_wait_minutes' => $order->estimated_wait_minutes,
-                'ordered_at' => $order->ordered_at->toDateTimeString(),
+                'ordered_at' => $order->ordered_at,
                 'table_id' => $order->table_id,
-                'pickup_time' => $order->pickup_time?->toDateTimeString(),
+                'pickup_time' => $order->pickup_time,
                 'delivery_address' => $order->delivery_address,
                 'items' => $order->orderItems->map(fn($item) => [
                     'name' => $item->menu->name,
