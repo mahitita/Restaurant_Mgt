@@ -15,6 +15,10 @@ export default {
             fontFamily: {
                 sans: ['Figtree', ...defaultTheme.fontFamily.sans],
             },
+            colors: {
+                'gursha-primary': '#D97706', // Warm orange
+                'gursha-accent': '#F59E0B',  // Lighter orange
+              },
         },
     },
 

@@ -13,6 +13,10 @@ class User extends Authenticatable
     protected $fillable = ['name', 'email', 'phone', 'password', 'role'];
 
     protected $hidden = ['password'];
+    protected $primaryKey = 'id'; // Should be 'id' (default), not 'phone'
+    public $incrementing = true;  // Should be true for auto-incrementing ID
+
+
 
     public function orders()
     {
@@ -31,6 +35,6 @@ class User extends Authenticatable
 
     public function isAdmin()
     {
-        return in_array($this->role, ['manager']); 
+        return $this->is_admin;
     }
 }

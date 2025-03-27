@@ -1,127 +1,144 @@
+<!-- resources/js/Pages/Admin/Inventory/Index.vue -->
 <template>
-    <div class="container mx-auto p-4">
-      <h1 class="text-2xl font-bold mb-4">Inventory Management</h1>
+    <AdminLayout>
+      <div class="container mx-auto p-6">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">Ingredient Management</h1>
 
-      <div v-if="flash.success" class="bg-green-100 p-2 mb-4 rounded">
-        {{ flash.success }}
-      </div>
-      <div v-if="flash.error" class="bg-red-100 p-2 mb-4 rounded">
-        {{ flash.error }}
-      </div>
+        <!-- Flash Messages -->
+        <div v-if="flash.success" class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded">
+          {{ flash.success }}
+        </div>
+        <div v-if="flash.error" class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded">
+          {{ flash.error }}
+        </div>
 
-      <div class="flex justify-between mb-4">
-        <button @click="goToCreate" class="bg-blue-500 text-white p-2 rounded">
-          Add New Inventory Item
-        </button>
-        <div class="relative">
+        <!-- Header with Actions -->
+        <div class="flex justify-between items-center mb-6">
+          <div class="flex space-x-4">
+            <button @click="goToCreate" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+              Add New Ingredient
+            </button>
+            <button @click="goToStockHistory" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition">
+              View Stock History
+            </button>
+          </div>
+          <div class="relative">
             <input
               type="text"
               v-model="searchQuery"
-              placeholder="Search Menu..."
-              class="border p-2 rounded-lg w-full max-w-xs"
+              placeholder="Search Ingredients..."
+              class="border border-gray-300 p-2 rounded-lg w-full max-w-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            <button class="absolute top-2 right-2 text-gray-500">🔍</button>
+            <span class="absolute top-3 right-3 text-gray-500">🔍</span>
           </div>
-      </div>
+        </div>
 
-      <table class="w-full border-collapse">
-        <thead>
-          <tr class="bg-gray-200">
-            <th class="p-2">Name</th>
-            <th class="p-2">Quantity</th>
-            <th class="p-2">Unit Cost</th>
-            <th class="p-2">Unit</th>
-            <th class="p-2">Threshold</th>
-            <th class="p-2">Expiry Date</th>
-            <th class="p-2">Status</th>
-            <th class="p-2">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="inventory in filteredInventories"
-            :key="inventory.id"
-            :class="{ 'bg-yellow-100': inventory.low_stock, 'bg-red-100': inventory.expired }"
-          >
-            <td class="p-2">{{ inventory.name }}</td>
-            <td class="p-2">{{ inventory.quantity }}</td>
-            <td class="p-2">${{ inventory.unit_cost }}</td>
-            <td class="p-2">{{ inventory.unit }}</td>
-            <td class="p-2">{{ inventory.threshold }}</td>
-            <td class="p-2">{{ inventory.expiry_date || 'N/A' }}</td>
-            <td class="p-2">
-              <span v-if="inventory.expired">Expired</span>
-              <span v-else-if="inventory.low_stock">Low Stock</span>
-              <span v-else>Normal</span>
-            </td>
-            <td class="p-2">
-              <button @click="goToEdit(inventory.id)" class="text-blue-500 mr-2">Edit</button>
-              <button @click="deleteInventory(inventory)" class="text-red-500 mr-2">Delete</button>
-              <button @click="showAddStockModal(inventory)" class="text-green-500 mr-2">Add Stock</button>
-              <button @click="goToPurchaseHistory(inventory.id)" class="text-purple-500">History</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+        <!-- Inventory Table -->
+        <div class="bg-white shadow-md rounded-lg overflow-hidden">
+          <table class="w-full border-collapse">
+            <thead>
+              <tr class="bg-gray-100 text-gray-700 text-left">
+                <th class="p-4">Name</th>
+                <th class="p-4">Total Quantity</th>
+                <th class="p-4">Remaining Quantity</th>
+                <th class="p-4">Unit Cost</th>
+                <th class="p-4">Unit</th>
+                <th class="p-4">Threshold</th>
+                <th class="p-4">Expiry Date</th>
+                <th class="p-4">Status</th>
+                <th class="p-4">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="inventory in filteredInventories"
+                :key="inventory.id"
+                :class="{ 'bg-yellow-50': inventory.low_stock && !inventory.expired, 'bg-red-50': inventory.expired }"
+                class="border-b hover:bg-gray-50"
+              >
+                <td class="p-4">{{ inventory.name }}</td>
+                <td class="p-4">{{ inventory.quantity }}</td>
+                <td class="p-4">{{ inventory.remaining_quantity }}</td>
+                <td class="p-4">Br {{ inventory.unit_cost }}</td>
+                <td class="p-4">{{ inventory.unit }}</td>
+                <td class="p-4">{{ inventory.threshold || '5' }}</td>
+                <td class="p-4">{{ inventory.expiry_date || 'N/A' }}</td>
+                <td class="p-4">
+                  <span
+                    :class="{
+                      'text-red-600': inventory.expired,
+                      'text-yellow-600': inventory.low_stock && !inventory.expired,
+                      'text-green-600': !inventory.low_stock && !inventory.expired,
+                    }"
+                  >
+                    {{ inventory.expired ? 'Expired' : inventory.low_stock ? 'Low Stock' : 'Normal' }}
+                  </span>
+                </td>
+                <td class="p-4 flex space-x-2">
+                  <button @click="goToEdit(inventory.id)" class="text-blue-600 hover:underline">Edit</button>
+                  <button @click="deleteInventory(inventory)" class="text-red-600 hover:underline">Delete</button>
+                  <button @click="showAddStockModal(inventory)" class="text-green-600 hover:underline">Add Stock</button>
+                  <button @click="goToPurchaseHistory(inventory.id)" class="text-purple-600 hover:underline">Purchase History</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-      <!-- Add Stock Modal -->
-      <div v-if="selectedInventory" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
-        <div class="bg-white p-4 rounded w-96">
-          <h2 class="text-xl mb-4">Add Stock to {{ selectedInventory.name }}</h2>
-          <div class="mb-4">
-            <label class="block text-gray-700">Amount</label>
-            <input
-              v-model.number="stockForm.amount"
-              type="number"
-              min="1"
-              class="border p-2 w-full"
-              placeholder="Amount"
-              required
-            />
-          </div>
-          <div class="mb-4">
-            <label class="block text-gray-700">Total Cost ($)</label>
-            <input
-              v-model.number="stockForm.total_cost"
-              type="number"
-              step="0.01"
-              min="0"
-              class="border p-2 w-full"
-              placeholder="Total Cost"
-              required
-            />
-          </div>
-          <div class="mb-4">
-            <label class="block text-gray-700">Supplier</label>
-            <input
-              v-model="stockForm.supplier"
-              type="text"
-              class="border p-2 w-full"
-              placeholder="Supplier (optional)"
-            />
-          </div>
-          <div class="flex justify-end">
-            <button
-              @click.prevent="addStock"
-              class="bg-green-500 text-white p-2 rounded mr-2"
-            >
-              Add
-            </button>
-            <button
-              @click="closeModal"
-              class="text-gray-500 p-2"
-            >
-              Cancel
-            </button>
+        <!-- Add Stock Modal -->
+        <div v-if="selectedInventory" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+          <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Add Stock to {{ selectedInventory.name }}</h2>
+            <div class="mb-4">
+              <label class="block text-gray-700 font-medium mb-1">Amount</label>
+              <input
+                v-model.number="stockForm.amount"
+                type="number"
+                min="1"
+                class="border border-gray-300 p-2 w-full rounded focus:outline-none focus:ring-2 focus:ring-green-500"
+                placeholder="Amount"
+                required
+              />
+            </div>
+            <div class="mb-4">
+              <label class="block text-gray-700 font-medium mb-1">Total Cost (Br)</label>
+              <input
+                v-model.number="stockForm.total_cost"
+                type="number"
+                step="0.01"
+                min="0"
+                class="border border-gray-300 p-2 w-full rounded focus:outline-none focus:ring-2 focus:ring-green-500"
+                placeholder="Total Cost"
+                required
+              />
+            </div>
+            <div class="mb-4">
+              <label class="block text-gray-700 font-medium mb-1">Supplier</label>
+              <input
+                v-model="stockForm.supplier"
+                type="text"
+                class="border border-gray-300 p-2 w-full rounded focus:outline-none focus:ring-2 focus:ring-green-500"
+                placeholder="Supplier (optional)"
+              />
+            </div>
+            <div class="flex justify-end space-x-2">
+              <button @click.prevent="addStock" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
+                Add Stock
+              </button>
+              <button @click="closeModal" class="text-gray-600 px-4 py-2 rounded-lg hover:bg-gray-100 transition">
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </AdminLayout>
   </template>
 
   <script>
-  import { Inertia } from '@inertiajs/inertia';
-import AdminLayout from '@/Layouts/AdminLayout.vue';
+  import { router } from '@inertiajs/vue3';
+  import AdminLayout from '@/Layouts/AdminLayout.vue';
+
   export default {
     layout: AdminLayout,
     props: {
@@ -152,30 +169,30 @@ import AdminLayout from '@/Layouts/AdminLayout.vue';
     },
     methods: {
       goToCreate() {
-        Inertia.visit('/admin/inventory/create');
+        router.get(route('admin.inventory.create'));
       },
       goToEdit(inventoryId) {
-        Inertia.visit(`/admin/inventory/${inventoryId}/edit`);
+        router.get(route('admin.inventory.edit', inventoryId));
+      },
+      goToStockHistory() {
+        router.get(route('admin.inventory.stock-history'));
       },
       deleteInventory(inventory) {
         if (confirm(`Are you sure you want to delete ${inventory.name}?`)) {
-          Inertia.delete(`/admin/inventory/${inventory.id}`);
+          router.delete(route('admin.inventory.destroy', inventory.id));
         }
       },
       goToPurchaseHistory(inventoryId) {
-        Inertia.visit(`/admin/inventory/${inventoryId}/purchase-history`);
+        router.get(route('admin.inventory.purchase-history', inventoryId));
       },
       showAddStockModal(inventory) {
-        console.log('Opening modal for:', inventory.name);
         this.selectedInventory = inventory;
         this.stockForm = { amount: '', total_cost: '', supplier: '' };
       },
       closeModal() {
-        console.log('Closing modal');
         this.selectedInventory = null;
       },
       addStock() {
-        console.log('Add button clicked with:', this.stockForm);
         const amount = Number(this.stockForm.amount);
         const totalCost = Number(this.stockForm.total_cost);
 
@@ -185,24 +202,13 @@ import AdminLayout from '@/Layouts/AdminLayout.vue';
             total_cost: totalCost,
             supplier: this.stockForm.supplier || null,
           };
-          console.log('Sending POST request:', {
-            url: `/admin/inventory/${this.selectedInventory.id}/add-stock`,
-            data: payload,
-          });
-          Inertia.post(`/admin/inventory/${this.selectedInventory.id}/add-stock`, payload, {
+          router.post(route('admin.inventory.add-stock', this.selectedInventory.id), payload, {
             onSuccess: () => {
-              console.log('Stock added successfully');
               this.selectedInventory = null;
-            },
-            onError: (errors) => {
-              console.log('Errors:', errors);
-            },
-            onFinish: () => {
-              console.log('Request finished');
             },
           });
         } else {
-          console.log('Validation failed:', { amount, totalCost });
+          alert('Please enter a valid amount and total cost.');
         }
       },
     },

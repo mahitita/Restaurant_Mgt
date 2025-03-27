@@ -4,36 +4,47 @@ import piniaPersist from 'pinia-plugin-persistedstate';
 import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
-import { Inertia } from '@inertiajs/inertia';
-import Toast from 'vue-toastification'
+import Toast from 'vue-toastification';
+import 'vue-toastification/dist/index.css';
 import './bootstrap';
 import '../css/app.css';
-// Explicit import for testing
-import OrderConfirmation from './Pages/OrderConfirmation.vue';
 
 const pinia = createPinia();
 pinia.use(piniaPersist);
 
+// Debug available pages
+const pages = import.meta.glob('./Pages/**/*.vue');
+// console.log('Available pages:', Object.keys(pages));
+
 createInertiaApp({
   title: (title) => `${title} - Laravel`,
-  resolve: (name) => {
+  resolve: async (name) => {
     console.log("Resolving component:", name);
-    if (name === 'OrderConfirmation') {
-      return Promise.resolve(OrderConfirmation); // Force direct import
-    }
-    return resolvePageComponent(
-      `./Pages/${name}.vue`,
-      import.meta.glob('./Pages/**/*.vue')
-    ).catch((err) => {
+    try {
+      const page = await resolvePageComponent(
+        `./Pages/${name}.vue`,
+        import.meta.glob('./Pages/**/*.vue')
+      );
+      console.log(`Successfully resolved ${name}:`, page);
+      return page;
+    } catch (err) {
       console.error(`Failed to resolve ${name}:`, err);
-      throw new Error(`Component ${name} not found`);
-    });
-    
+      // Fallback to Error.vue
+      const errorPage = await resolvePageComponent(
+        `./Pages/Error.vue`,
+        import.meta.glob('./Pages/**/*.vue')
+      );
+      console.log("Falling back to Error.vue");
+      return errorPage;
+    }
   },
   setup({ el, App, props, plugin }) {
     const app = createApp({ render: () => h(App, props) })
       .use(plugin)
-      .use(Toast)
+      .use(Toast, {
+        position: 'top-right',
+        timeout: 3000,
+      })
       .use(ZiggyVue)
       .use(pinia);
     app.mount(el);
@@ -43,4 +54,3 @@ createInertiaApp({
     color: '#4B5563',
   },
 });
-window.Inertia = Inertia;

@@ -29,6 +29,8 @@ class Menu extends Model
         return $this->belongsTo(Category::class);
     }
 
+
+
     public function inventories()
     {
         return $this->belongsToMany(Inventory::class, 'inventory_menu')

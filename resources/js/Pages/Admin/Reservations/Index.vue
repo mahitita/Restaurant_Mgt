@@ -52,7 +52,7 @@
   </template>
 
   <script>
-  import { Inertia } from '@inertiajs/inertia';
+  import { router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
   export default {
     layout: AdminLayout,
@@ -79,10 +79,10 @@ import AdminLayout from '@/Layouts/AdminLayout.vue';
     },
     methods: {
       goToTables() {
-        Inertia.visit('/admin/tables');
+        router.get('/admin/tables');
       },
       goToEdit(reservationId) {
-        Inertia.visit(`/admin/reservations/${reservationId}/edit`);
+        router.get(`/admin/reservations/${reservationId}/edit`);
       },
       cancelReservation(reservation) {
         if (confirm(`Are you sure you want to cancel reservation for table ${reservation.table_number}?`)) {

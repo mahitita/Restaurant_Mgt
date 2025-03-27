@@ -40,4 +40,15 @@ class UserMenuController extends Controller
             'categories' => $categories,
         ]);
     }
+
+    public function addToCart(Request $request, $menuId)
+    {
+        if (!auth()->check()) {
+            return redirect()->route('user.login', ['return_to' => route('cart.add', $menuId)]);
+        }
+
+        $menu = Menu::findOrFail($menuId);
+        // Since we're using Pinia client-side, we don’t need server-side cart logic here
+        return redirect()->route('menu.index')->with('success', "{$menu->name} added to cart!");
+    }
 }

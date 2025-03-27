@@ -49,10 +49,10 @@
   </template>
 
   <script>
-  import { Inertia } from '@inertiajs/inertia';
+  import { router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
   export default {
-    components: { AdminLayout },
+    Layout: AdminLayout,
     props: {
       menus: Array,
     },
@@ -73,7 +73,7 @@ import AdminLayout from '@/Layouts/AdminLayout.vue';
     },
     methods: {
       goToMenus() {
-        Inertia.visit('/admin/menus');
+        router.get('/admin/menus');
       },
     },
   };

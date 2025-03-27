@@ -2,11 +2,11 @@
     <UserLayout>
       <section class="container mx-auto py-12 px-4">
         <h2 class="text-4xl font-bold mb-8 text-gray-800">Your Cart</h2>
-  
+
         <div v-if="cartItems.length === 0" class="text-center text-gray-500 text-lg">
           Your cart is empty. <Link href="/menu" class="text-orange-600 hover:underline">Explore our menu!</Link>
         </div>
-  
+
         <div v-else>
           <!-- Cart items -->
           <div v-for="item in cartItems" :key="item.id" class="flex items-center justify-between py-4 border-b">
@@ -30,11 +30,11 @@
               </button>
             </div>
           </div>
-  
+
           <div class="mt-8">
             <h3 class="text-2xl font-bold text-gray-800">Total: ${{ totalPrice.toFixed(2) }}</h3>
           </div>
-  
+
           <!-- Order Type -->
           <div class="mt-8">
             <label class="block text-lg font-semibold mb-2 text-gray-800" for="orderType">Order Type:</label>
@@ -44,7 +44,7 @@
               <option value="delivery">Delivery</option>
             </select>
           </div>
-  
+
           <!-- Dine-in Table Selection -->
           <div v-if="orderType === 'dine-in'" class="mt-6">
             <h3 class="text-lg font-semibold mb-4 text-gray-800">Select a Table:</h3>
@@ -67,25 +67,25 @@
             </div>
             <p v-if="orderType === 'dine-in' && !selectedTable" class="text-red-500 mt-2">Please select a table.</p>
           </div>
-  
+
           <!-- Takeout Pickup Time -->
           <div v-if="orderType === 'takeout'" class="mt-6">
             <label class="block text-lg font-semibold mb-2 text-gray-800" for="pickupTime">Pickup Time:</label>
             <input type="datetime-local" v-model="pickupTime" class="border p-2 rounded w-full md:w-1/3" />
           </div>
-  
+
           <!-- Delivery Address -->
           <div v-if="orderType === 'delivery'" class="mt-6">
             <label class="block text-lg font-semibold mb-2 text-gray-800" for="deliveryAddress">Delivery Address:</label>
             <input type="text" v-model="deliveryAddress" class="border p-2 rounded w-full md:w-1/2" placeholder="Enter your address" />
           </div>
-  
+
           <button @click="openPaymentModal" class="mt-8 bg-orange-600 text-white px-6 py-3 rounded-full hover:bg-orange-700">
             Proceed to Checkout
           </button>
         </div>
       </section>
-  
+
       <!-- Payment Modal -->
       <div v-if="showPaymentModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
@@ -112,7 +112,7 @@
       </div>
     </UserLayout>
   </template>
-  
+
   <script>
   import UserLayout from '../Layouts/UserLayout.vue';
   import { useCartStore } from '../Stores/CartStore';
@@ -120,13 +120,13 @@
   import { ref, onMounted } from 'vue';
   import { router, Link } from '@inertiajs/vue3'; // Updated import
   import axios from 'axios';
-  
+
   export default {
     components: { UserLayout, Link },
     setup() {
       const cartStore = useCartStore();
       const { cartItems, totalPrice } = storeToRefs(cartStore);
-  
+
       const orderType = ref('takeout');
       const selectedTable = ref(null);
       const pickupTime = ref('');
@@ -137,7 +137,7 @@
         paymentType: 'card',
         accountNumber: '',
       });
-  
+
       const fetchTables = async () => {
         try {
           const response = await axios.get('/tables/available', {
@@ -148,21 +148,21 @@
           console.error('Error fetching tables:', error);
         }
       };
-  
+
       onMounted(fetchTables);
-  
+
       const selectTable = (tableId) => {
         selectedTable.value = tableId;
       };
-  
+
       const updateItemQuantity = (menuId, quantity) => {
         cartStore.updateQuantity(menuId, quantity);
       };
-  
+
       const removeFromCart = (menuId) => {
         cartStore.removeFromCart(menuId);
       };
-  
+
       const openPaymentModal = () => {
         if (orderType.value === 'dine-in' && !selectedTable.value) {
           alert('Please select a table.');
@@ -178,13 +178,13 @@
         }
         showPaymentModal.value = true;
       };
-  
+
       const processPayment = () => {
         if (payment.value.paymentType !== 'cash' && !payment.value.accountNumber) {
           alert('Please enter your account number.');
           return;
         }
-  
+
         console.log('Sending order:', {
           cart: cartItems.value,
           order_type: orderType.value,
@@ -193,7 +193,7 @@
           delivery_address: deliveryAddress.value,
           payment: payment.value,
         });
-  
+
         router.post(route('orders.store'), {
           cart: cartItems.value,
           order_type: orderType.value,
@@ -220,13 +220,13 @@
           },
         });
       };
-  
+
       onMounted(() => {
         if (cartItems.value.length > 0) {
           console.log('Cart loaded with items:', cartItems.value);
         }
       });
-  
+
       return {
         cartItems,
         totalPrice,

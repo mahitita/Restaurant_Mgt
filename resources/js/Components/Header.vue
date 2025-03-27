@@ -1,160 +1,127 @@
 <template>
-    <header class="bg-gradient-to-r from-gursha-secondary to-gursha-accent text-white shadow-xl sticky top-0 z-50">
-      <nav class="container mx-auto px-6 py-4 flex items-center justify-between">
+    <header class="bg-gradient-to-r from-orange-600 to-yellow-500 text-white shadow-lg">
+      <div class="container mx-auto px-4 py-4 flex items-center justify-between">
         <!-- Logo -->
-        <div class="flex items-center">
-          <Link href="/" class="flex items-center group">
-            <img
-              src="/images/gursha-logo.png"
-              alt="Gursha Logo"
-              class="h-14 w-auto mr-3 transform group-hover:scale-110 transition-transform duration-300"
-            />
-            <span class="text-3xl font-extrabold tracking-tight text-gursha-light group-hover:text-gursha-primary transition-colors duration-300">
-              Gursha
+        <Link href="/" class="text-3xl font-bold tracking-tight hover:text-yellow-200 transition duration-300">
+          Gursha
+        </Link>
+
+        <!-- Navigation -->
+        <nav class="hidden md:flex items-center space-x-8">
+          <Link href="/" class="nav-link">Home</Link>
+          <Link href="/menu" class="nav-link">Menu</Link>
+          <Link href="/tables" class="nav-link">Tables</Link>
+
+          <!-- Cart Icon with Count -->
+          <Link href="/cart" class="relative flex items-center group">
+            <svg class="w-6 h-6 fill-current group-hover:text-yellow-200 transition duration-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49A1.003 1.003 0 0 0 20 4H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
+            </svg>
+            <span v-if="cartItems.length > 0" class="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center group-hover:bg-red-700 transition duration-300">
+              {{ totalItems }}
             </span>
           </Link>
-        </div>
 
-        <!-- Navigation Links -->
-        <div class="hidden md:flex items-center space-x-8">
-          <Link
-            v-for="link in navLinks"
-            :key="link.href"
-            :href="link.href"
-            class="text-lg font-medium text-white hover:text-gursha-primary hover:scale-105 transform transition-all duration-200"
-          >
-            {{ link.label }}
-          </Link>
-        </div>
+          <!-- Guest Links -->
+          <template v-if="!auth?.user">
+            <Link href="/user/login" class="nav-link">Login</Link>
+          </template>
 
-        <!-- Auth Links -->
-        <div class="hidden md:flex items-center space-x-4">
-          <Link
-            v-if="$page.props.auth.user"
-            href="/dashboard"
-            class="text-lg font-medium hover:text-gursha-primary transition-colors duration-200"
-          >
-            Dashboard
-          </Link>
-          <Link
-            v-if="$page.props.auth.user"
-            href="/logout"
-            method="post"
-            as="button"
-            class="text-lg font-medium hover:text-gursha-primary transition-colors duration-200"
-          >
-            Logout
-          </Link>
-          <Link v-else href="/login" class="text-lg font-medium hover:text-gursha-primary transition-colors duration-200">
-            Login
-          </Link>
-          <Link
-            v-else
-            href="/register"
-            class="bg-gursha-primary text-white px-6 py-2 rounded-full font-semibold hover:bg-opacity-90 hover:shadow-lg transform hover:scale-105 transition-all duration-300"
-          >
-            Register
-          </Link>
-        </div>
+          <!-- Authenticated Links -->
+          <template v-else>
+            
+            <Link href="/reservations" class="nav-link">My Reservations</Link>
+            <Link href="/orders" class="nav-link">My Orders</Link>
+            <Link href="/user/logout" as="button" method="post" class="nav-link">Logout</Link>
+            <Link href="/profile" class="flex items-center group">
+              <div class="w-10 h-10 bg-yellow-400 text-orange-800 rounded-full flex items-center justify-center text-xl font-bold group-hover:bg-yellow-300 transition duration-300">
+                {{ auth.user.name.charAt(0).toUpperCase() }}
+              </div>
+            </Link>
+          </template>
+        </nav>
 
         <!-- Mobile Menu Button -->
-        <button @click="toggleMenu" class="md:hidden focus:outline-none p-2 rounded-full hover:bg-gursha-primary transition-colors duration-200">
-          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              :d="menuOpen ? 'M6 18L18 6M6 6l12 12' : 'M4 6h16M4 12h16M4 18h16'"
-            />
+        <button @click="toggleMenu" class="md:hidden focus:outline-none">
+          <svg class="w-8 h-8 fill-current hover:text-yellow-200 transition duration-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path v-if="!isMenuOpen" d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/>
+            <path v-else d="M6 18L18 6M6 6l12 12"/>
           </svg>
         </button>
-      </nav>
+      </div>
 
       <!-- Mobile Menu -->
       <transition name="slide">
-        <div v-if="menuOpen" class="md:hidden bg-gursha-secondary px-6 py-4 shadow-lg">
-          <div class="flex flex-col space-y-4">
-            <Link
-              v-for="link in navLinks"
-              :key="link.href"
-              :href="link.href"
-              class="text-lg font-medium text-white hover:text-gursha-primary hover:pl-2 transition-all duration-200"
-              @click="toggleMenu"
-            >
-              {{ link.label }}
+        <div v-if="isMenuOpen" class="md:hidden bg-orange-600 text-white px-4 py-6">
+          <Link href="/" class="mobile-nav-link">Home</Link>
+          <Link href="/menu" class="mobile-nav-link">Menu</Link>
+          <Link href="/tables" class="mobile-nav-link">Tables</Link>
+          <Link href="/cart" class="mobile-nav-link flex items-center">
+            Cart
+            <span v-if="cartItems.length > 0" class="ml-2 bg-red-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+              {{ totalItems }}
+            </span>
+          </Link>
+
+          <!-- Guest Mobile Links -->
+          <template v-if="!auth?.user">
+            <Link href="/user/login" class="mobile-nav-link">Login</Link>
+          </template>
+
+          <!-- Authenticated Mobile Links -->
+          <template v-else>
+            <Link href="/reservations" class="mobile-nav-link">My Reservations</Link>
+            <Link href="/orders" class="mobile-nav-link">My Orders</Link>
+            <Link href="/user/logout" as="button" method="post" class="mobile-nav-link">Logout</Link>
+            <Link href="/profile" class="mobile-nav-link flex items-center">
+              Profile
+              <div class="ml-2 w-8 h-8 bg-yellow-400 text-orange-800 rounded-full flex items-center justify-center text-lg font-bold">
+                {{ auth.user.name.charAt(0).toUpperCase() }}
+              </div>
             </Link>
-            <Link
-              v-if="$page.props.auth.user"
-              href="/dashboard"
-              class="text-lg font-medium hover:text-gursha-primary hover:pl-2 transition-all duration-200"
-              @click="toggleMenu"
-            >
-              Dashboard
-            </Link>
-            <Link
-              v-if="$page.props.auth.user"
-              href="/logout"
-              method="post"
-              as="button"
-              class="text-lg font-medium hover:text-gursha-primary hover:pl-2 transition-all duration-200"
-              @click="toggleMenu"
-            >
-              Logout
-            </Link>
-            <Link
-              v-else
-              href="/login"
-              class="text-lg font-medium hover:text-gursha-primary hover:pl-2 transition-all duration-200"
-              @click="toggleMenu"
-            >
-              Login
-            </Link>
-            <Link
-              v-else
-              href="/register"
-              class="bg-gursha-primary text-white px-6 py-2 rounded-full font-semibold text-center hover:bg-opacity-90 transition-all duration-300"
-              @click="toggleMenu"
-            >
-              Register
-            </Link>
-          </div>
+          </template>
         </div>
       </transition>
     </header>
   </template>
 
-  <script>
-  import { Link } from '@inertiajs/vue3';
+  <script setup>
+  import { ref } from 'vue';
+  import { Link, usePage } from '@inertiajs/vue3';
+  import { useCartStore } from '../Stores/CartStore';
+  import { storeToRefs } from 'pinia';
 
-  export default {
-    components: { Link },
-    data() {
-      return {
-        menuOpen: false,
-        navLinks: [
-          { href: '/', label: 'Home' },
-          { href: '#menus', label: 'Menus' },
-          { href: '#tables', label: 'Tables' },
-          { href: '#about', label: 'About Us' },
-          { href: '#contact', label: 'Contact Us' },
-        ],
-      };
-    },
-    methods: {
-      toggleMenu() {
-        this.menuOpen = !this.menuOpen;
-      },
-    },
+  // Access auth from Inertia's $page
+  const page = usePage();
+  const auth = page.props.auth;
+
+  const cartStore = useCartStore();
+  const { cartItems, totalItems } = storeToRefs(cartStore);
+
+  const isMenuOpen = ref(false);
+
+  const toggleMenu = () => {
+    isMenuOpen.value = !isMenuOpen.value;
   };
   </script>
 
   <style scoped>
+  .nav-link {
+    @apply text-lg font-medium hover:text-yellow-200 transition duration-300 transform hover:scale-105;
+  }
+
+  .mobile-nav-link {
+    @apply block py-3 text-lg font-medium hover:text-yellow-200 transition duration-300 border-b border-orange-500 last:border-b-0;
+  }
+
   .slide-enter-active,
   .slide-leave-active {
-    transition: transform 0.3s ease;
+    transition: all 0.3s ease;
   }
+
   .slide-enter-from,
   .slide-leave-to {
     transform: translateY(-100%);
+    opacity: 0;
   }
   </style>

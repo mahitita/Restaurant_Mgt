@@ -32,7 +32,7 @@
   </template>
 
   <script>
-  import { Inertia } from '@inertiajs/inertia';
+  import { router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 
   export default {
@@ -48,7 +48,7 @@ import AdminLayout from '@/Layouts/AdminLayout.vue';
     },
     methods: {
       goToInventory() {
-        Inertia.visit('/admin/inventory');
+        router.get('/admin/inventory');
       },
     },
   };

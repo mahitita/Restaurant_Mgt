@@ -96,33 +96,47 @@ class TableController extends Controller
         $table->delete();
         return redirect()->route('admin.tables.index')->with('success', 'Table deleted successfully.');
     }
-    public function updateStatus(Request $request, Table $table)
+public function updateStatus(Request $request, Table $table)
     {
         $validated = $request->validate([
             'status' => 'required|in:available,occupied,reserved',
-            'date' => 'nullable|date', // Optional date to check; defaults to today
+            'date' => 'nullable|date', // Optional date; defaults to today
         ]);
 
-        $checkDate = $request->date ? \Carbon\Carbon::parse($request->date) : now();
+        $checkDate = $request->date ? Carbon::parse($request->date) : now();
         $reservationDate = $checkDate->toDateString();
 
+        // Fetch reservation for the given date
         $reservation = $table->reservations()
             ->where('status', 'confirmed')
             ->whereDate('reservation_time', $reservationDate)
             ->first();
 
-        if ($validated['status'] === 'available' && $reservation) {
-            return redirect()->back()->with('error', "Table {$table->table_number} is reserved for {$reservationDate}. Cancel the reservation first.");
-        }
+        // Handle status transitions
+        switch ($validated['status']) {
+            case 'available':
+                if ($reservation) {
+                    return redirect()->back()->with('error', "Table {$table->table_number} is reserved for {$reservationDate}. Cancel the reservation first if the table is free.");
+                }
+                break;
 
-        if ($validated['status'] === 'reserved' && !$reservation) {
-            return redirect()->back()->with('error', "Table {$table->table_number} has no confirmed reservation for {$reservationDate}. Create a reservation first.");
+            case 'reserved':
+                if (!$reservation) {
+                    return redirect()->back()->with('error', "Table {$table->table_number} has no confirmed reservation for {$reservationDate}. Create a reservation first.");
+                }
+                break;
+
+            case 'occupied':
+                if (!$reservation) {
+                    return redirect()->back()->with('error', "Table {$table->table_number} has no confirmed reservation for {$reservationDate}. It cannot be marked as occupied without a reservation.");
+                }
+                break;
         }
 
         $table->status = $validated['status'];
         $table->save();
 
-        return redirect()->route('admin.tables.index')->with('success', 'Table status updated.');
+        return redirect()->route('admin.tables.index')->with('success', "Table {$table->table_number} status updated to '{$validated['status']}' for {$reservationDate}.");
     }
 
 
