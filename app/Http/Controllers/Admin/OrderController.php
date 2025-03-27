@@ -14,21 +14,21 @@ class OrderController extends Controller
     public function index(Request $request)
     {
         // Allow filtering by status via query parameter
-        $statusFilter = $request->query('status', ['pending']); // Default to 'received' and 'preparing'
+        $statusFilter = $request->query('status', ['pending']);
         if (!is_array($statusFilter)) {
             $statusFilter = [$statusFilter];
         }
         $validStatuses = ['pending', 'received', 'preparing', 'ready', 'completed', 'cancelled'];
         $statusFilter = array_intersect($statusFilter, $validStatuses);
 
-        // Log the status filter being applied
+
         Log::info('Order Index - Status Filter:', ['status' => $statusFilter]);
 
         $orders = Order::with('orderItems.menu', 'user')
             ->when(!empty($statusFilter), fn($query) => $query->whereIn('status', $statusFilter))
             ->orderBy('is_priority', 'desc')
             ->orderBy('created_at', 'asc')
-            ->paginate(10) // Paginate with 10 orders per page
+            ->paginate(10)
             ->through(fn($order) => [
                 'id' => $order->id,
                 'user_name' => optional($order->user)->name ?? 'Guest',
@@ -48,7 +48,7 @@ class OrderController extends Controller
                 ]),
             ]);
 
-        // Log the orders being returned
+        
         Log::info('Order Index - Orders Retrieved:', ['orders' => $orders->toArray()]);
 
         return Inertia::render('Admin/Orders/Index', [

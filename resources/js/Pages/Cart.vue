@@ -1,115 +1,147 @@
 <template>
     <UserLayout>
-      <section class="container mx-auto py-12 px-4">
-        <h2 class="text-4xl font-bold mb-8 text-gray-800">Your Cart</h2>
-
-        <div v-if="cartItems.length === 0" class="text-center text-gray-500 text-lg">
-          Your cart is empty. <Link href="/menu" class="text-orange-600 hover:underline">Explore our menu!</Link>
+      <section class="container mx-auto py-12 px-4 md:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-10">
+          <h2 class="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">Your Cart</h2>
+          <Link href="/menu" class="text-orange-500 hover:text-orange-600 font-medium text-lg transition-colors">
+            Back to Menu
+          </Link>
         </div>
 
-        <div v-else>
-          <!-- Cart items -->
-          <div v-for="item in cartItems" :key="item.id" class="flex items-center justify-between py-4 border-b">
-            <div class="flex items-center">
-              <img :src="item.image" :alt="item.name" class="w-24 h-24 object-cover rounded-lg" />
-              <div class="ml-6">
-                <h3 class="text-xl font-semibold text-gray-800">{{ item.name }}</h3>
-                <p class="text-gray-600">${{ item.price }} x {{ item.quantity }}</p>
+        <!-- Empty Cart State -->
+        <div v-if="cartItems.length === 0" class="bg-white rounded-lg shadow-md p-8 text-center">
+          <p class="text-gray-600 text-xl">Your cart is empty.</p>
+          <Link href="/menu" class="mt-4 inline-block text-orange-600 hover:text-orange-700 font-semibold text-lg">
+            Explore Our Menu
+          </Link>
+        </div>
+
+        <!-- Cart Content -->
+        <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <!-- Cart Items (Left/Top) -->
+          <div class="lg:col-span-2 space-y-6">
+            <div v-for="item in cartItems" :key="item.id" class="bg-white rounded-xl shadow-md p-4 flex items-center justify-between hover:shadow-lg transition-shadow">
+              <div class="flex items-center space-x-4">
+                <img :src="item.image" :alt="item.name" class="w-20 h-20 object-cover rounded-md" />
+                <div>
+                  <h3 class="text-lg font-semibold text-gray-900">{{ item.name }}</h3>
+                  <p class="text-gray-700">Br {{ item.price}} x {{ item.quantity }}</p>
+                </div>
+              </div>
+              <div class="flex items-center space-x-3">
+                <input
+                  type="number"
+                  min="1"
+                  v-model.number="item.quantity"
+                  @change="updateItemQuantity(item.id, item.quantity)"
+                  class="w-16 p-2 border rounded-md text-center focus:ring-2 focus:ring-orange-500"
+                />
+                <button @click="removeFromCart(item.id)" class="text-red-600 hover:text-red-700 font-medium">
+                  Remove
+                </button>
               </div>
             </div>
-            <div class="flex items-center">
-              <input
-                type="number"
-                min="1"
-                v-model.number="item.quantity"
-                @change="updateItemQuantity(item.id, item.quantity)"
-                class="w-16 border p-2 text-center rounded"
-              />
-              <button @click="removeFromCart(item.id)" class="ml-4 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
-                Remove
-              </button>
+          </div>
+
+          <!-- Order Summary & Actions (Right/Bottom) -->
+          <div class="lg:col-span-1">
+            <div class="bg-white rounded-xl shadow-md p-6 sticky top-6">
+              <h3 class="text-2xl font-bold text-gray-900 mb-6">Order Summary</h3>
+
+              <!-- Order Type -->
+              <div class="mb-6">
+                <label class="block text-gray-800 font-medium mb-2">Order Type</label>
+                <select v-model="orderType" class="w-full border p-2 rounded-md focus:ring-2 focus:ring-orange-500">
+                  <option value="dine-in">Dine-in</option>
+                  <option value="takeout">Takeout</option>
+                  <option value="delivery">Delivery</option>
+                </select>
+              </div>
+
+              <!-- Dine-in Table Selection -->
+              <div v-if="orderType === 'dine-in'" class="mb-6">
+                <h4 class="text-lg font-medium text-gray-800 mb-3">Select a Table</h4>
+                <div class="grid grid-cols-2 gap-3">
+                  <button
+                    v-for="table in availableTables"
+                    :key="table.id"
+                    @click="selectTable(table.id)"
+                    :class="{
+                      'bg-green-600 text-white': selectedTable === table.id,
+                      'bg-gray-200 text-gray-600 cursor-not-allowed': !table.available,
+                      'bg-orange-600 text-white hover:bg-orange-700': table.available && selectedTable !== table.id,
+                    }"
+                    class="p-3 rounded-md text-sm font-medium transition-colors"
+                    :disabled="!table.available"
+                  >
+                    Table {{ table.table_number }} ({{ table.seats }})
+                  </button>
+                </div>
+                <p v-if="!selectedTable" class="text-red-500 text-sm mt-2">Please select a table.</p>
+              </div>
+
+              <!-- Takeout Pickup Time -->
+              <div v-if="orderType === 'takeout'" class="mb-6">
+                <label class="block text-gray-800 font-medium mb-2">Pickup Time</label>
+                <input type="datetime-local" v-model="pickupTime" class="w-full border p-2 rounded-md focus:ring-2 focus:ring-orange-500" />
+              </div>
+
+              <!-- Delivery Address -->
+              <div v-if="orderType === 'delivery'" class="mb-6">
+                <label class="block text-gray-800 font-medium mb-2">Delivery Address</label>
+                <input type="text" v-model="deliveryAddress" class="w-full border p-2 rounded-md focus:ring-2 focus:ring-orange-500" placeholder="Enter your address" />
+              </div>
+
+              <!-- Total Price -->
+              <div class="border-t pt-4 mb-6">
+                <p class="text-xl font-semibold text-gray-900">Total: <span class="text-orange-600">Br {{ totalPrice }}</span></p>
+              </div>
+
+              <!-- Actions: Join Waitlist & Payment -->
+              <div class="flex flex-col space-y-4">
+                <!-- Show "Proceed to Checkout" for all order types -->
+                <button
+                  @click="openPaymentModal"
+                  :disabled="orderType === 'dine-in' && !selectedTable"
+                  :class="{
+                    'bg-orange-600 text-white hover:bg-orange-700': !(orderType === 'dine-in' && !selectedTable),
+                    'bg-gray-400 text-gray-200 cursor-not-allowed': orderType === 'dine-in' && !selectedTable,
+                  }"
+                  class="w-full px-6 py-2 rounded-md transition-colors"
+                >
+                  Proceed to Checkout
+                </button>
+              </div>
             </div>
           </div>
+        </div>
 
-          <div class="mt-8">
-            <h3 class="text-2xl font-bold text-gray-800">Total: ${{ totalPrice.toFixed(2) }}</h3>
-          </div>
-
-          <!-- Order Type -->
-          <div class="mt-8">
-            <label class="block text-lg font-semibold mb-2 text-gray-800" for="orderType">Order Type:</label>
-            <select id="orderType" v-model="orderType" class="border p-2 rounded w-full md:w-1/3">
-              <option value="dine-in">Dine-in</option>
-              <option value="takeout">Takeout</option>
-              <option value="delivery">Delivery</option>
+        <!-- Payment Modal -->
+        <div v-if="showPaymentModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+          <div class="bg-white rounded-xl p-6 shadow-xl w-full max-w-sm">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">Complete Payment</h2>
+            <p class="text-gray-700 mb-4">Total: <span class="font-semibold text-orange-600">Br {{ totalPrice }}</span></p>
+            <select v-model="payment.paymentType" class="w-full border p-2 rounded-md mb-4 focus:ring-2 focus:ring-orange-500">
+              <option value="card">Card</option>
+              <option value="bank_transfer">Bank Transfer</option>
+              <option value="cash">Cash</option>
             </select>
-          </div>
-
-          <!-- Dine-in Table Selection -->
-          <div v-if="orderType === 'dine-in'" class="mt-6">
-            <h3 class="text-lg font-semibold mb-4 text-gray-800">Select a Table:</h3>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <button
-                v-for="table in availableTables"
-                :key="table.id"
-                @click="selectTable(table.id)"
-                :class="{
-                  'bg-green-500 text-white': selectedTable === table.id,
-                  'bg-gray-300 text-gray-700 cursor-not-allowed': !table.available,
-                  'bg-orange-600 text-white hover:bg-orange-700': table.available && selectedTable !== table.id,
-                }"
-                class="p-4 rounded-lg shadow-md text-center"
-                :disabled="!table.available"
-              >
-                <p class="text-lg font-semibold">Table {{ table.table_number }}</p>
-                <p class="text-sm">Seats: {{ table.seats }}</p>
+            <input
+              v-if="payment.paymentType !== 'cash'"
+              v-model="payment.accountNumber"
+              placeholder="Account Number"
+              class="w-full border p-2 rounded-md mb-4 focus:ring-2 focus:ring-orange-500"
+            />
+            <div class="flex justify-end space-x-3">
+              <button @click="showPaymentModal = false" class="text-gray-600 hover:text-gray-800 font-medium">Cancel</button>
+              <button @click="processPayment" class="bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700 transition-colors">
+                Pay Now
               </button>
             </div>
-            <p v-if="orderType === 'dine-in' && !selectedTable" class="text-red-500 mt-2">Please select a table.</p>
           </div>
-
-          <!-- Takeout Pickup Time -->
-          <div v-if="orderType === 'takeout'" class="mt-6">
-            <label class="block text-lg font-semibold mb-2 text-gray-800" for="pickupTime">Pickup Time:</label>
-            <input type="datetime-local" v-model="pickupTime" class="border p-2 rounded w-full md:w-1/3" />
-          </div>
-
-          <!-- Delivery Address -->
-          <div v-if="orderType === 'delivery'" class="mt-6">
-            <label class="block text-lg font-semibold mb-2 text-gray-800" for="deliveryAddress">Delivery Address:</label>
-            <input type="text" v-model="deliveryAddress" class="border p-2 rounded w-full md:w-1/2" placeholder="Enter your address" />
-          </div>
-
-          <button @click="openPaymentModal" class="mt-8 bg-orange-600 text-white px-6 py-3 rounded-full hover:bg-orange-700">
-            Proceed to Checkout
-          </button>
         </div>
       </section>
-
-      <!-- Payment Modal -->
-      <div v-if="showPaymentModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-          <h2 class="text-2xl font-bold mb-4 text-gray-800">Payment</h2>
-          <p class="text-lg mb-4">Total: ${{ totalPrice.toFixed(2) }}</p>
-          <select v-model="payment.paymentType" class="border p-2 rounded w-full mb-4">
-            <option value="card">Card</option>
-            <option value="bank_transfer">Bank Transfer</option>
-            <option value="cash">Cash</option>
-          </select>
-          <input
-            v-if="payment.paymentType !== 'cash'"
-            v-model="payment.accountNumber"
-            placeholder="Account Number"
-            class="border p-2 rounded w-full mb-4"
-          />
-          <div class="flex justify-end">
-            <button @click="processPayment" class="bg-orange-600 text-white px-6 py-2 rounded hover:bg-orange-700">
-              Pay Now
-            </button>
-            <button @click="showPaymentModal = false" class="ml-4 text-gray-600 hover:text-gray-800">Cancel</button>
-          </div>
-        </div>
-      </div>
     </UserLayout>
   </template>
 
@@ -180,46 +212,38 @@
       };
 
       const processPayment = () => {
-        if (payment.value.paymentType !== 'cash' && !payment.value.accountNumber) {
-          alert('Please enter your account number.');
-          return;
-        }
+  if (payment.value.paymentType !== 'cash' && !payment.value.accountNumber) {
+    alert('Please enter your account number.');
+    return;
+  }
 
-        console.log('Sending order:', {
-          cart: cartItems.value,
-          order_type: orderType.value,
-          table_id: selectedTable.value,
-          pickup_time: pickupTime.value,
-          delivery_address: deliveryAddress.value,
-          payment: payment.value,
-        });
-
-        router.post(route('orders.store'), {
-          cart: cartItems.value,
-          order_type: orderType.value,
-          table_id: selectedTable.value,
-          pickup_time: pickupTime.value,
-          delivery_address: deliveryAddress.value,
-          payment: payment.value,
-        }, {
-          preserveState: false,
-          onBefore: () => {
-            console.log('Before sending request, cart:', cartItems.value);
-          },
-          onSuccess: () => {
-            console.log('Order successful, clearing cart');
-            cartStore.clearCart();
-            showPaymentModal.value = false;
-          },
-          onError: (errors) => {
-            console.error('Order failed:', errors);
-            alert('Payment failed: ' + JSON.stringify(errors));
-          },
-          onFinish: () => {
-            console.log('Request finished, current cart:', cartItems.value);
-          },
-        });
-      };
+  router.post(route('orders.store'), {
+    cart: cartItems.value,
+    order_type: orderType.value,
+    table_id: selectedTable.value,
+    pickup_time: pickupTime.value,
+    delivery_address: deliveryAddress.value,
+    payment: payment.value,
+  }, {
+    preserveState: false,
+    onBefore: () => {
+      console.log('Before sending request, cart:', cartItems.value);
+    },
+    onSuccess: () => {
+      console.log('Order successful, clearing cart');
+      cartStore.clearCart();
+      showPaymentModal.value = false;
+      // No client-side redirect needed; server handles it
+    },
+    onError: (errors) => {
+      console.error('Order failed:', errors);
+      alert('Payment failed: ' + JSON.stringify(errors));
+    },
+    onFinish: () => {
+      console.log('Request finished, current cart:', cartItems.value);
+    },
+  });
+};
 
       onMounted(() => {
         if (cartItems.value.length > 0) {

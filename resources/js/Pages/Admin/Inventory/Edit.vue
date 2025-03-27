@@ -1,6 +1,5 @@
-<!-- resources/js/Pages/Admin/Inventory/Edit.vue -->
 <template>
-    
+
       <div class="container mx-auto p-6 bg-white shadow-md rounded-lg">
         <h1 class="text-3xl font-bold mb-6 text-gray-800">Edit Inventory Item</h1>
 

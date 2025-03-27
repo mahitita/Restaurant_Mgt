@@ -48,7 +48,6 @@ class UserMenuController extends Controller
         }
 
         $menu = Menu::findOrFail($menuId);
-        // Since we're using Pinia client-side, we don’t need server-side cart logic here
         return redirect()->route('menu.index')->with('success', "{$menu->name} added to cart!");
     }
 }

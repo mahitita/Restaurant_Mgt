@@ -117,7 +117,6 @@ class ReservationController extends Controller
     $waitlist->update(['status' => $request->status]);
     if ($request->status === 'seated') {
         $waitlist->update(['notified_at' => now()]);
-        // TODO: Trigger notification (e.g., email, SMS, or frontend update)
     }
 
     return redirect()->back()->with('success', 'Waitlist status updated.');

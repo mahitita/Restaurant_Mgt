@@ -1,5 +1,5 @@
 <template>
-    <AdminLayout>
+    
       <div class="container mx-auto p-6 bg-white shadow-md rounded-lg">
         <h1 class="text-3xl font-bold mb-6">Menu Management</h1>
 
@@ -63,7 +63,7 @@
           </tbody>
         </table>
       </div>
-    </AdminLayout>
+
   </template>
 
   <script>

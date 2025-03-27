@@ -28,18 +28,26 @@ class InventoryController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|unique:inventories,name',
-            'quantity' => 'required|integer|min:0',
+            'quantity' => 'required|integer|min:0', // Validated as integer
             'unit_cost' => 'required|numeric|min:0',
             'unit' => 'required|string',
             'threshold' => 'required|integer|min:1',
             'expiry_date' => 'nullable|date|after:today',
         ]);
 
-        $inventory = Inventory::create(array_merge($validated, [
-            'remaining_quantity' => $validated['quantity'], // Set initial remaining_quantity
-        ]));
+        $inventoryData = array_merge($validated, [
+            'quantity' => (string) $validated['quantity'],
+            'remaining_quantity' => (string) $validated['quantity'],
+            'initial_stock' => (string) $validated['quantity'],
+            'total_stock_added' => (string) $validated['quantity'],
+        ]);
 
-        // Add initial stock log
+        Log::info('Validated input for inventory creation:', $inventoryData);
+
+        $inventory = Inventory::create($inventoryData);
+
+        Log::info('Inventory created:', $inventory->toArray());
+
         if ($validated['quantity'] > 0) {
             $inventory->logs()->create([
                 'action' => 'added',
@@ -54,12 +62,12 @@ class InventoryController extends Controller
     public function stockHistory()
     {
         $inventories = Inventory::with('logs')->get()->map(function ($inventory) {
-            Log::info('Inventory data:', [
+            Log::info('Stock history for:', [
                 'name' => $inventory->name,
                 'quantity' => $inventory->quantity,
                 'remaining_quantity' => $inventory->remaining_quantity,
-                'initial_stock' => $inventory->initial_stock,
-                'total_stock_added' => $inventory->total_stock_added,
+                'initial_stock' => $inventory->initial_stock ?? 'Not set',
+                'total_stock_added' => $inventory->total_stock_added ?? 'Not set',
                 'log_count' => $inventory->logs->count(),
             ]);
 
@@ -69,8 +77,8 @@ class InventoryController extends Controller
                 'quantity' => $inventory->quantity,
                 'remaining_quantity' => $inventory->remaining_quantity,
                 'unit' => $inventory->unit,
-                'initial_stock' => $inventory->initial_stock,
-                'total_stock_added' => $inventory->total_stock_added,
+                'initial_stock' => $inventory->initial_stock ?? 0,
+                'total_stock_added' => $inventory->total_stock_added ?? 0,
                 'logs' => $inventory->logs->map(fn($log) => [
                     'action' => $log->action,
                     'quantity' => $log->quantity,
@@ -99,10 +107,22 @@ class InventoryController extends Controller
             'expiry_date' => 'nullable|date|after:today',
         ]);
 
-        // Update remaining_quantity to match quantity if it changes
-        $validated['remaining_quantity'] = $validated['quantity'];
+        $quantityChanged = $inventory->quantity !== $validated['quantity'];
+        if ($quantityChanged) {
+            $validated['remaining_quantity'] = $validated['quantity'];
+            $validated['initial_stock'] = $validated['quantity'];
+            $validated['total_stock_added'] = $validated['quantity'];
+        }
 
         $inventory->update($validated);
+
+        Log::info('Inventory updated:', [
+            'name' => $inventory->name,
+            'quantity' => $inventory->quantity,
+            'remaining_quantity' => $inventory->remaining_quantity,
+            'initial_stock' => $inventory->initial_stock,
+            'total_stock_added' => $inventory->total_stock_added,
+        ]);
 
         return redirect()->route('admin.inventory.index')->with('success', 'Inventory item updated.');
     }
@@ -138,6 +158,7 @@ class InventoryController extends Controller
 
         $inventory->increment('quantity', $validated['amount']);
         $inventory->increment('remaining_quantity', $validated['amount']);
+        $inventory->increment('total_stock_added', $validated['amount']); 
 
         $inventory->purchases()->create([
             'quantity' => $validated['amount'],

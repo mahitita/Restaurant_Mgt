@@ -126,11 +126,8 @@ return [
     |
     */
 
-    'cookie' => env(
-        'SESSION_COOKIE',
-        Str::slug(env('APP_NAME', 'laravel'), '_').'_session'
-    ),
-
+'cookie' => 'admin_session', // Unique for admin
+'secure' => false,
     /*
     |--------------------------------------------------------------------------
     | Session Cookie Path

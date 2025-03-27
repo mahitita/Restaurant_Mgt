@@ -27,7 +27,6 @@ class LoginController extends Controller
             'password' => 'required',
         ]);
 
-        // Use the 'web' guard (default)
         if (Auth::guard('web')->attempt($credentials)) {
             $user = Auth::guard('web')->user();
             if ($user->role === 'customer') {
@@ -41,13 +40,9 @@ class LoginController extends Controller
                     'session' => $request->session()->all(),
                 ]);
 
-                // Clear the intended URL from the session
                 session()->forget('url.intended');
 
-                // Use Inertia::location for a hard redirect if necessary
                 return Inertia::location($returnTo);
-                // Alternatively, you can use redirect()->to() with setStatusCode(303)
-                // return redirect()->to($returnTo)->with('success', 'Login successful!')->setStatusCode(303);
             }
 
             Log::warning('User is not a customer, logging out', ['user_id' => $user->id]);

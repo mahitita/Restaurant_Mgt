@@ -6,12 +6,12 @@
           <h1 class="text-3xl font-extrabold text-gray-800">Admin Login</h1>
           <p class="mt-2 text-sm text-gray-600">Sign in to manage Gursha</p>
         </div>
-  
+
         <!-- Error Message -->
         <div v-if="form.error" class="bg-red-100 text-red-700 p-4 rounded-lg mb-6">
           {{ form.error }}
         </div>
-  
+
         <!-- Form -->
         <form @submit.prevent="submit" class="space-y-6">
           <!-- Email Field -->
@@ -26,7 +26,7 @@
               placeholder="admin@example.com"
             />
           </div>
-  
+
           <!-- Password Field -->
           <div>
             <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
@@ -39,7 +39,7 @@
               placeholder="••••••••"
             />
           </div>
-  
+
           <!-- Submit Button -->
           <button
             type="submit"
@@ -56,25 +56,22 @@
             <span v-else>Sign In</span>
           </button>
         </form>
-  
-        <!-- Footer Link -->
-        <!-- <p class="mt-6 text-center text-sm text-gray-600">
-          Not an admin? <Link href="/login" class="text-orange-600 hover:underline">Customer Login</Link>
-        </p> -->
+
+      
       </div>
     </div>
   </template>
-  
+
   <script setup>
   import { ref } from 'vue';
   import { router, Link, useForm } from '@inertiajs/vue3';
-  
+
   const form = useForm({
     email: '',
     password: '',
     error: null,
   });
-  
+
   const submit = () => {
     form.post(route('admin.login'), {
       onSuccess: () => {
@@ -86,7 +83,7 @@
     });
   };
   </script>
-  
+
   <style scoped>
   .animate-fade-in {
     animation: fadeIn 1s ease-in;

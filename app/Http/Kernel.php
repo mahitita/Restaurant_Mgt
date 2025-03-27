@@ -36,7 +36,6 @@ class Kernel extends HttpKernel
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
-            \App\Http\Middleware\RestrictGuestAccess::class,
         ],
         // ...
 
@@ -69,7 +68,9 @@ class Kernel extends HttpKernel
     ];
 
     protected $routeMiddleware = [
-        // Existing middleware...
+       'restrict.customer.guest' => \App\Http\Middleware\RestrictGuestAccess::class,
+    'auth:admin' => \Illuminate\Auth\Middleware\Authenticate::class,
+    // ...
         'auth' => \App\Http\Middleware\Authenticate::class,
         'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
         // Add this if missing

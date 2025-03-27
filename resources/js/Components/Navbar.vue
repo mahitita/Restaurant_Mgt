@@ -16,7 +16,7 @@
   export default {
     methods: {
       logout() {
-        router.post('/logout');
+        router.post('/admin/logout');
       },
     },
   };
